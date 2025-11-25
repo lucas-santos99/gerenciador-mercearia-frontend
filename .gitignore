@@ -1,33 +1,42 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Dependencies
+# ===============================
+# 📦 DEPENDÊNCIAS
+# ===============================
 node_modules/
 
-# Production build output
+# ===============================
+# 🔐 VARIÁVEIS DE AMBIENTE
+# ===============================
+.env
+.env.*
+!env.example
+
+# ===============================
+# 🎛️ BUILD / PRODUÇÃO
+# ===============================
 dist/
 dist-ssr/
+build/
 
-# Local environment
-.env
-.env.local
-*.local
-
-# Editor
+# ===============================
+# 🔧 EDITORES / SISTEMAS
+# ===============================
 .vscode/
-!.vscode/extensions.json
 .idea/
 .DS_Store
+Thumbs.db
 
-# Misc
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# ===============================
+# 🧪 TESTES
+# ===============================
+coverage/
+
+# ===============================
+# 🌐 Vite cache
+# ===============================
+.vite/
+
+# ===============================
+# 🧹 OUTROS
+# ===============================
+*.log
+*.local
