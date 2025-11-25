@@ -1,0 +1,115 @@
+/* ====== App.css (COM VARIÁVEIS DE TEMA) ======== */
+
+/* 1. Variáveis de Cores (Tema Claro - Padrão) */
+:root {
+  --bg-body: #f4f7fa;
+  --bg-sidebar: #2c3e50;
+  --bg-card: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-sidebar: #ecf0f1;
+  --border-color: #e0e0e0;
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --danger-color: #e74c3c;
+  --success-color: #28a745;
+  
+  /* Sombras */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Variáveis de Cores (Tema Escuro) */
+[data-theme="dark"] {
+  --bg-body: #1a1a1a;
+  --bg-sidebar: #121212;
+  --bg-card: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-sidebar: #e0e0e0; /* Sidebar pode manter ou mudar */
+  --border-color: #444444;
+  --primary-color: #3a8fdc; /* Um azul um pouco mais claro */
+  --primary-hover: #2c6ea8;
+  
+  /* Sombras mais sutis no escuro */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 3. Reset Global e Aplicação de Variáveis */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  overflow: hidden;
+  
+  /* Aplica a cor de fundo e texto base */
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+}
+
+/* 4. Box-sizing universal */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== ESTILOS DE IMPRESSÃO INTELIGENTE (Mantido Igual) ===== */
+@media print {
+    .sidebar, 
+    .tabs-nav, 
+    .financeiro-controles button, 
+    .header-botoes, 
+    .estoque-busca-input,
+    .btn-pdf-relatorio,
+    .btn-gerar-relatorio,
+    .relatorio-form,
+    .estoque-sidebar-categorias,
+    .no-print,
+    .theme-toggle-btn { /* Esconde o botão de tema na impressão */
+        display: none !important;
+    }
+
+    .dashboard-container {
+        display: block;
+        background-color: white; /* Impressão sempre fundo branco */
+        height: auto;
+        color: black; /* Impressão sempre texto preto */
+    }
+    .main-content {
+        margin-left: 0;
+        height: auto;
+        overflow: visible;
+    }
+    .content-area {
+        padding: 0;
+        overflow: visible;
+    }
+
+    .financeiro-container, .estoque-layout-container {
+        box-shadow: none;
+        padding: 0;
+        border: none;
+    }
+
+    .resumo-cards-container, 
+    .contas-card-container, 
+    .report-card-container,
+    .estoque-grid-produtos {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr) !important; 
+        gap: 15px;
+    }
+
+    body, #root {
+        height: auto;
+        overflow: visible;
+    }
+    
+    /* Força cores claras na impressão mesmo se estiver no modo escuro */
+    [data-theme="dark"] {
+        --bg-body: white;
+        --text-primary: black;
+        --border-color: #ccc;
+    }
+}
