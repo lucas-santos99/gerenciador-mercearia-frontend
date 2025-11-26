@@ -9,7 +9,7 @@ import './App.css';
 const BACKEND_BASE_URL = 'http://localhost:3001';
 
 
-// Teste real de deploy 2 - agora vai
+// Teste real de deploy 2 - agora vaiaa
 
 
 // FUNÇÃO HELPER
