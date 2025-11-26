@@ -6,10 +6,11 @@ import TelaBloqueio from './components/TelaBloqueio';
 import { createSupabaseClient } from './utils/supabaseClient'; 
 import './App.css'; 
 
-const BACKEND_BASE_URL = 'http://localhost:3001';
-
-
-// Teste real de deploy 2 - agora vaiaa
+// Seleciona automaticamente o backend correto (local vs produção)
+const BACKEND_BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3001"
+        : "https://mercearia-api.onrender.com";
 
 
 // FUNÇÃO HELPER
@@ -147,8 +148,5 @@ function App() {
   return <div>Verificando assinatura... (Status: {statusAssinatura || 'null'})</div>;
 }
 
-console.log("Deploy test working!");
-
 export default App;
 
-// teste para deploy
