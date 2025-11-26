@@ -143,6 +143,8 @@ function App() {
   return <div>Verificando assinatura... (Status: {statusAssinatura || 'null'})</div>;
 }
 
+console.log("Deploy test working!");
+
 export default App;
 
 // teste para deploy
