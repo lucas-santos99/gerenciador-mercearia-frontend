@@ -1,18 +1,22 @@
-// ===== src/components/Configuracoes.jsx (MÁSCARAS E DESIGN NOVO) =====
+// ===== src/components/Configuracoes.jsx (BACKEND CORRIGIDO) =====
 import React, { useState, useEffect } from 'react';
 import './Configuracoes.css';
 
-const BACKEND_BASE_URL = 'http://localhost:3001';
+// BACKEND AUTOMÁTICO (LOCALHOST ↔ PRODUÇÃO RENDER)
+const BACKEND_BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3001"
+        : "https://mercearia-api.onrender.com";
 
 // --- Helpers de Máscara ---
 const mascaraCNPJ = (valor) => {
     return valor
-        .replace(/\D/g, '') // Remove tudo o que não é dígito
+        .replace(/\D/g, '')
         .replace(/^(\d{2})(\d)/, '$1.$2')
         .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
         .replace(/\.(\d{3})(\d)/, '.$1/$2')
         .replace(/(\d{4})(\d)/, '$1-$2')
-        .substr(0, 18); // Limita ao tamanho do CNPJ
+        .substr(0, 18);
 };
 
 const mascaraTelefone = (valor) => {
@@ -31,20 +35,23 @@ const mascaraTelefone = (valor) => {
 };
 
 const Configuracoes = ({ merceariaId, supabaseProp, onLogoUpdated, logoUrl }) => {
+    
     const [formData, setFormData] = useState({
         nome_fantasia: '',
         cnpj: '',
         telefone: '',
         email_contato: '',
         endereco_completo: '',
-        logo_url: logoUrl || '' 
+        logo_url: logoUrl || ''
     });
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [uploading, setUploading] = useState(false); 
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
+    // ---- BUSCAR DADOS AO ABRIR ----
     useEffect(() => {
         const fetchDados = async () => {
             if (!merceariaId) return;
@@ -54,14 +61,14 @@ const Configuracoes = ({ merceariaId, supabaseProp, onLogoUpdated, logoUrl }) =>
                 const response = await fetch(`${BACKEND_BASE_URL}/api/mercearias/dados/${merceariaId}`);
                 if (!response.ok) throw new Error('Falha ao carregar dados da mercearia.');
                 const data = await response.json();
-                
+
                 setFormData({
                     nome_fantasia: data.nome_fantasia || '',
                     cnpj: data.cnpj || '',
                     telefone: data.telefone || '',
                     email_contato: data.email_contato || '',
                     endereco_completo: data.endereco_completo || '',
-                    logo_url: data.logo_url || '' 
+                    logo_url: data.logo_url || ''
                 });
             } catch (err) {
                 setError(err.message);
@@ -69,75 +76,77 @@ const Configuracoes = ({ merceariaId, supabaseProp, onLogoUpdated, logoUrl }) =>
                 setLoading(false);
             }
         };
+
         fetchDados();
     }, [merceariaId]);
 
-    // 🎯 HANDLER COM MÁSCARAS AUTOMÁTICAS
+    // ---- MÁSCARAS ----
     const handleChange = (e) => {
         const { name, value } = e.target;
-        let valorFinal = value;
+        let v = value;
 
-        if (name === 'cnpj') {
-            valorFinal = mascaraCNPJ(value);
-        } else if (name === 'telefone') {
-            valorFinal = mascaraTelefone(value);
-        }
+        if (name === 'cnpj') v = mascaraCNPJ(value);
+        if (name === 'telefone') v = mascaraTelefone(value);
 
-        setFormData(prev => ({ ...prev, [name]: valorFinal }));
+        setFormData(prev => ({ ...prev, [name]: v }));
     };
 
+    // ---- UPLOAD DE LOGO ----
     const handleUploadLogo = async (event) => {
         setError(null);
         setSuccess(null);
+
         if (!event.target.files || event.target.files.length === 0) return;
         if (!supabaseProp) {
-            setError('Erro: Conexão com o Supabase não encontrada.');
+            setError("Erro: Supabase não encontrado.");
             return;
         }
 
         const file = event.target.files[0];
-        const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
-        
+        const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
         if (file.size > MAX_FILE_SIZE) {
-            setError('Arquivo muito pesado. O limite é de 2 MB.');
-            event.target.value = null; 
+            setError("Arquivo muito pesado. Máx: 2MB.");
+            event.target.value = null;
             return;
         }
 
         const fileExt = file.name.split('.').pop();
         const filePath = `public/${merceariaId}.${fileExt}`;
+
         setUploading(true);
         try {
             const { error: uploadError } = await supabaseProp.storage
-                .from('logos')
+                .from("logos")
                 .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: true 
+                    cacheControl: "3600",
+                    upsert: true
                 });
 
             if (uploadError) throw uploadError;
-            const { data: publicUrlData } = supabaseProp.storage
-                .from('logos')
+
+            const { data: publicData } = supabaseProp.storage
+                .from("logos")
                 .getPublicUrl(filePath);
-            if (!publicUrlData || !publicUrlData.publicUrl) {
-                throw new Error('Não foi possível obter a URL pública da logo.');
+
+            if (!publicData?.publicUrl) {
+                throw new Error("Falha ao obter URL pública.");
             }
 
-            const newLogoUrl = publicUrlData.publicUrl;
-            setFormData(prev => ({ ...prev, logo_url: newLogoUrl }));
-            if (onLogoUpdated) {
-                onLogoUpdated(newLogoUrl);
-            }
-            
-            setSuccess('Logo enviada! Clique em "Salvar Alterações" para confirmar.');
+            const newLogo = publicData.publicUrl;
+
+            setFormData(prev => ({ ...prev, logo_url: newLogo }));
+            if (onLogoUpdated) onLogoUpdated(newLogo);
+
+            setSuccess("Logo enviada! Clique em salvar.");
         } catch (err) {
-            console.error("Erro no upload:", err);
-            setError(`Falha no upload da logo: ${err.message}`);
+            setError(`Erro no upload: ${err.message}`);
         } finally {
             setUploading(false);
         }
     };
 
+    // ---- SALVAR ALTERAÇÕES ----
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -146,18 +155,17 @@ const Configuracoes = ({ merceariaId, supabaseProp, onLogoUpdated, logoUrl }) =>
 
         try {
             const response = await fetch(`${BACKEND_BASE_URL}/api/mercearias/dados/${merceariaId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData) 
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
             });
+
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Erro ao salvar alterações.');
-            
-            if (onLogoUpdated) {
-                onLogoUpdated(result.logo_url);
-            }
-            
-            setSuccess('Dados da mercearia atualizados com sucesso!');
+            if (!response.ok) throw new Error(result.error || "Erro ao salvar.");
+
+            if (onLogoUpdated) onLogoUpdated(result.logo_url);
+
+            setSuccess("Dados atualizados com sucesso!");
         } catch (err) {
             setError(err.message);
         } finally {
@@ -170,88 +178,106 @@ const Configuracoes = ({ merceariaId, supabaseProp, onLogoUpdated, logoUrl }) =>
     return (
         <div className="configuracoes-container">
             <h3>Dados da Mercearia</h3>
-            <p>Estas informações aparecerão nos seus recibos e relatórios.</p>
+            <p>Estas informações aparecem nos recibos e relatórios.</p>
 
             <form className="configuracoes-form-grid" onSubmit={handleSubmit}>
-                
-                {/* Coluna 1: Dados */}
+
+                {/* --- COLUNA 1: DADOS --- */}
                 <div className="form-coluna-dados">
-                    
+
                     <div className="form-group">
-                        <label htmlFor="nome_fantasia">Nome Fantasia *</label>
-                        <div className="input-wrapper">
-                            <span className="input-icon">🏪</span>
-                            <input type="text" id="nome_fantasia" name="nome_fantasia" value={formData.nome_fantasia} onChange={handleChange} required placeholder="Ex: Mercearia do João" />
-                        </div>
+                        <label>Nome Fantasia *</label>
+                        <input 
+                            type="text"
+                            name="nome_fantasia"
+                            value={formData.nome_fantasia}
+                            onChange={handleChange}
+                            required
+                        />
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="cnpj">CNPJ</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon">📝</span>
-                                <input type="text" id="cnpj" name="cnpj" value={formData.cnpj} onChange={handleChange} placeholder="00.000.000/0001-00" maxLength={18} />
-                            </div>
+                            <label>CNPJ</label>
+                            <input 
+                                type="text"
+                                name="cnpj"
+                                maxLength={18}
+                                value={formData.cnpj}
+                                onChange={handleChange}
+                            />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="telefone">Telefone / WhatsApp</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon">📱</span>
-                                <input type="text" id="telefone" name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(00) 00000-0000" maxLength={15} />
-                            </div>
+                            <label>Telefone / WhatsApp</label>
+                            <input 
+                                type="text"
+                                name="telefone"
+                                maxLength={15}
+                                value={formData.telefone}
+                                onChange={handleChange}
+                            />
                         </div>
                     </div>
-                    
+
                     <div className="form-group">
-                        <label htmlFor="email_contato">Email de Contato</label>
-                        <div className="input-wrapper">
-                            <span className="input-icon">📧</span>
-                            <input type="email" id="email_contato" name="email_contato" value={formData.email_contato} onChange={handleChange} placeholder="contato@mercearia.com" />
-                        </div>
+                        <label>Email de Contato</label>
+                        <input 
+                            type="email"
+                            name="email_contato"
+                            value={formData.email_contato}
+                            onChange={handleChange}
+                        />
                     </div>
-                    
+
                     <div className="form-group">
-                        <label htmlFor="endereco_completo">Endereço Completo</label>
-                        <textarea id="endereco_completo" name="endereco_completo" value={formData.endereco_completo} onChange={handleChange} rows="3" placeholder="Ex: Rua das Flores, 123, Centro - Cidade/UF" />
+                        <label>Endereço Completo</label>
+                        <textarea
+                            name="endereco_completo"
+                            rows="3"
+                            value={formData.endereco_completo}
+                            onChange={handleChange}
+                        />
                     </div>
-                
+
                 </div>
 
-                {/* Coluna 2: Logo */}
+                {/* --- COLUNA 2: LOGO --- */}
                 <div className="form-coluna-logo">
-                    <label>Logo da Marca</label>
+                    <label>Logo da Mercearia</label>
+
                     <div className="logo-preview">
-                        {logoUrl ? (
-                            <img src={logoUrl} alt="Logo Atual" />
+                        {formData.logo_url ? (
+                            <img src={formData.logo_url} alt="Logo" />
                         ) : (
                             <span>Sem Logo</span>
                         )}
                     </div>
-                    
+
                     <input 
-                        type="file" 
-                        id="logo-upload" 
-                        onChange={handleUploadLogo} 
+                        type="file"
+                        id="logo-upload"
+                        accept="image/png,image/jpeg"
                         disabled={uploading}
-                        accept="image/png, image/jpeg" 
+                        onChange={handleUploadLogo}
                     />
                     <label htmlFor="logo-upload" className="btn-upload-logo">
-                        {uploading ? 'Enviando...' : '📸 Escolher Imagem'}
+                        {uploading ? "Enviando..." : "📸 Escolher Imagem"}
                     </label>
-                    
-                    <small>
-                        <b>Dica:</b> Use uma imagem PNG com fundo transparente para melhor resultado. <br />
-                        Tamanho máximo: 2 MB.
-                    </small>
+
+                    <small><b>Tamanho máximo: 2MB.</b></small>
                 </div>
 
-                {/* Ações do Formulário */}
+                {/* --- BOTÕES --- */}
                 <div className="form-actions">
                     {error && <p className="config-error">{error}</p>}
                     {success && <p className="config-success">{success}</p>}
-                    
-                    <button type="submit" className="btn-salvar-config" disabled={saving || uploading}>
-                        {saving ? 'Salvando...' : '💾 Salvar Alterações'}
+
+                    <button 
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="btn-salvar-config"
+                    >
+                        {saving ? "Salvando..." : "💾 Salvar Alterações"}
                     </button>
                 </div>
             </form>

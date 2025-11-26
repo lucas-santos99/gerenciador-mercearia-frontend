@@ -1,20 +1,22 @@
-// ======= ProdutoList.jsx (COMPLETO + BUSCA WILDCARD %) ======
+// ======= ProdutoList.jsx (CORRIGIDO PARA PRODUÇÃO) ======
 import React, { useState, useEffect, useRef } from 'react';
 import './ProdutoList.css';
 import ProdutoModal from './ProdutoModal';
 import CategoriaModal from './CategoriaModal';
-// 🎯 1. IMPORTAÇÃO DA BIBLIOTECA EXCEL
 import * as XLSX from 'xlsx';
 
-const BACKEND_BASE_URL = 'http://localhost:3001';
+// ✔ Backend correto (local vs produção)
+const BACKEND_BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3001"
+        : "https://mercearia-api.onrender.com";
 
-// --- (Helper de Formatação de Moeda) ---
+// --- Helpers ---
 const formatCurrency = (value) => {
     const number = parseFloat(value || 0);
     return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-// --- (Helper de Formatação de Estoque) ---
 const formatarEstoque = (estoque, unidade) => {
     const valor = parseFloat(estoque);
     if (unidade === 'kg') {
@@ -23,295 +25,235 @@ const formatarEstoque = (estoque, unidade) => {
     return `${Math.trunc(valor)} un.`;
 };
 
-// --- HELPER: Normalizar Texto (Remove Acentos) ---
 const normalizeText = (text) => {
     if (!text) return '';
     return text
         .toString()
         .toLowerCase()
-        .normalize("NFD") // Separa acentos das letras
-        .replace(/[\u0300-\u036f]/g, ""); // Remove os acentos
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 };
-// -------------------------------------------------------------------
-
 
 const ProdutoList = ({ merceariaId, shouldFocusSearch, onFocusHandled }) => {
-    // --- Estados Principais ---
+
+    // --- Estados ---
     const [produtos, setProdutos] = useState([]);
-    const [categorias, setCategorias] = useState([]); 
+    const [categorias, setCategorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    // --- Estados de UI (Interface) ---
-    const [categoriaAtiva, setCategoriaAtiva] = useState('todos'); 
-    const [termoBusca, setTermoBusca] = useState('');
-    const [produtoFocadoId, setProdutoFocadoId] = useState(null); 
 
-    // --- Estados dos Modais ---
+    const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
+    const [termoBusca, setTermoBusca] = useState('');
+    const [produtoFocadoId, setProdutoFocadoId] = useState(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [produtoSelecionado, setProdutoSelecionado] = useState(null); 
+    const [produtoSelecionado, setProdutoSelecionado] = useState(null);
     const [isCategoriaModalOpen, setIsCategoriaModalOpen] = useState(false);
-    
-    // 🎯 Ref para o campo de busca (F7)
+
     const searchInputRef = useRef(null);
 
-    // --- 1. FUNÇÃO PARA BUSCAR TUDO ---
+    // 🛑 Se merceariaId ainda não carregou, evita erros
+    useEffect(() => {
+        if (!merceariaId) {
+            console.log("ProdutoList.jsx: aguardando merceariaId...");
+            return;
+        }
+        fetchData();
+    }, [merceariaId]);
+
+    // === 1. BUSCAR PRODUTOS E CATEGORIAS ===
     const fetchData = async (focarNoProdutoId = null) => {
+        if (!merceariaId) return;
+
         setLoading(true);
-        setError(null); 
+        setError(null);
+
         try {
             const [produtosRes, categoriasRes] = await Promise.all([
                 fetch(`${BACKEND_BASE_URL}/api/mercearias/${merceariaId}/produtos`),
                 fetch(`${BACKEND_BASE_URL}/api/categorias/${merceariaId}`)
             ]);
-            if (!produtosRes.ok) throw new Error(`Falha ao buscar produtos (Status: ${produtosRes.status})`);
-            if (!categoriasRes.ok) throw new Error('Falha ao buscar categorias');
+
+            if (!produtosRes.ok) throw new Error(`Erro ao buscar produtos (status ${produtosRes.status})`);
+            if (!categoriasRes.ok) throw new Error("Erro ao buscar categorias");
+
             const produtosData = await produtosRes.json();
             const categoriasData = await categoriasRes.json();
+
             setProdutos(produtosData);
             setCategorias(categoriasData);
+
             if (focarNoProdutoId) {
                 setProdutoFocadoId(focarNoProdutoId);
-                const produtoSalvo = produtosData.find(p => p.id === focarNoProdutoId);
-                if (produtoSalvo) {
-                    setCategoriaAtiva(produtoSalvo.categoria_id || 'sem_categoria');
-                }
+                const p = produtosData.find(x => x.id === focarNoProdutoId);
+                if (p) setCategoriaAtiva(p.categoria_id || "sem_categoria");
             }
+
         } catch (err) {
-            console.error("Erro ao buscar dados:", err);
+            console.error("Erro no fetchData:", err);
             setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [merceariaId]);
-    
-    // --- Efeito de Foco/Rolagem (Sem alterações) ---
-    useEffect(() => {
-        if (produtoFocadoId) {
-            const elemento = document.getElementById(`produto-card-${produtoFocadoId}`);
-            if (elemento) {
-                elemento.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'center'
-                });
-                const timer = setTimeout(() => {
-                    setProdutoFocadoId(null);
-                }, 3000);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [produtoFocadoId, produtos]);
-    
-    // 🎯 EFEITO PARA O ATALHO F7
+    // === Foco automático (F7) ===
     useEffect(() => {
         if (!loading && shouldFocusSearch && searchInputRef.current) {
             setTimeout(() => {
                 searchInputRef.current.focus();
-                if (onFocusHandled) {
-                    onFocusHandled();
-                }
-            }, 100);
+                onFocusHandled?.();
+            }, 120);
         }
     }, [shouldFocusSearch, loading]);
 
-    // --- 2. FUNÇÕES DE CONTROLE DO MODAL (PRODUTO) ---
-    const abrirModalAdicionar = () => {
-        setProdutoSelecionado(null);
-        setIsModalOpen(true);
-    };
-    const abrirModalEditar = (produto) => {
-        setProdutoSelecionado(produto); 
-        setIsModalOpen(true);
-    };
-    const fecharModal = () => {
-        setIsModalOpen(false);
-        setProdutoSelecionado(null); 
-    };
-
-    // --- 3. FUNÇÃO DE CALLBACK (Produto Salvo) ---
-    const handleProdutoSalvo = (produtoSalvo) => {
-        fetchData(produtoSalvo.id);
-    };
-
-    // --- 4. FUNÇÃO DE DELETAR PRODUTO ---
-    const handleDeletarProduto = async (produtoId) => {
-        if (!window.confirm("Tem certeza que deseja excluir este produto?")) return;
-        setError(null); 
-        try {
-            const response = await fetch(`${BACKEND_BASE_URL}/api/mercearias/${merceariaId}/produtos/${produtoId}`, {
-                method: 'DELETE',
-            });
-            if (!response.ok) {
-                const erroData = await response.json();
-                throw new Error(erroData.error || 'Erro desconhecido ao excluir');
+    // === Scroll para produto editado ===
+    useEffect(() => {
+        if (produtoFocadoId) {
+            const el = document.getElementById(`produto-card-${produtoFocadoId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                setTimeout(() => setProdutoFocadoId(null), 3000);
             }
-            setProdutos(prevProdutos => prevProdutos.filter(p => p.id !== produtoId));
+        }
+    }, [produtoFocadoId, produtos]);
+
+    // === Deletar produto ===
+    const handleDeletarProduto = async (produtoId) => {
+        if (!window.confirm("Deseja realmente excluir este produto?")) return;
+
+        try {
+            const resp = await fetch(
+                `${BACKEND_BASE_URL}/api/mercearias/${merceariaId}/produtos/${produtoId}`,
+                { method: "DELETE" }
+            );
+
+            if (!resp.ok) {
+                const errData = await resp.json();
+                throw new Error(errData.error || "Erro ao excluir produto");
+            }
+
+            setProdutos(produtos.filter((p) => p.id !== produtoId));
+
         } catch (err) {
-            console.error("Erro ao deletar produto:", err);
-            setError(err.message); 
+            console.error(err);
+            setError(err.message);
         }
     };
-    
-    // 🎯 FUNÇÃO DE IMPRIMIR
-    const handleImprimir = () => {
-        window.print();
+
+    // === Salvar produto ===
+    const handleProdutoSalvo = (obj) => {
+        fetchData(obj.id);
     };
 
-    // 🎯 2. FUNÇÃO DE EXPORTAR PARA EXCEL (DETALHADA)
+    // === EXPORTAR PARA EXCEL ===
     const handleExportarExcel = () => {
         if (produtos.length === 0) {
-            alert("Não há produtos para exportar.");
+            alert("Nenhum produto para exportar.");
             return;
         }
-        
-        // Prepara os dados formatados
-        const dadosFormatados = produtos.map(prod => {
-            const catNome = categorias.find(c => c.id === prod.categoria_id)?.nome || 'Sem Categoria';
-            const custo = parseFloat(prod.preco_custo || 0);
-            const venda = parseFloat(prod.preco_venda || 0);
-            const lucroUnidade = venda - custo;
+
+        const dados = produtos.map(p => {
+            const catNome = categorias.find(c => c.id === p.categoria_id)?.nome || 'Sem Categoria';
+
+            const custo = parseFloat(p.preco_custo || 0);
+            const venda = parseFloat(p.preco_venda || 0);
 
             return {
                 "Categoria": catNome,
-                "Produto": prod.nome,
-                "Cód. Barras": prod.codigo_barras || '',
-                "Estoque": parseFloat(prod.estoque_atual),
-                "Unid.": prod.unidade_medida,
+                "Produto": p.nome,
+                "Cód. Barras": p.codigo_barras || '',
+                "Estoque": parseFloat(p.estoque_atual),
+                "Unid.": p.unidade_medida,
                 "Custo (R$)": formatCurrency(custo),
                 "Venda (R$)": formatCurrency(venda),
-                "Lucro p/ Unid. (Est.)": formatCurrency(lucroUnidade)
+                "Lucro por Unid": formatCurrency(venda - custo)
             };
         });
 
-        // Ordena por Categoria e depois por Nome
-        dadosFormatados.sort((a, b) => {
-            if (a["Categoria"] < b["Categoria"]) return -1;
-            if (a["Categoria"] > b["Categoria"]) return 1;
-            return a["Produto"].localeCompare(b["Produto"]);
-        });
+        const planilha = XLSX.utils.json_to_sheet(dados);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, planilha, "Produtos");
 
-        // Cria a planilha
-        const worksheet = XLSX.utils.json_to_sheet(dadosFormatados);
-        
-        // Ajusta largura das colunas
-        const colWidths = [
-            { wch: 20 }, // Categoria
-            { wch: 30 }, // Produto
-            { wch: 15 }, // Cód. Barras
-            { wch: 10 }, // Estoque
-            { wch: 8 },  // Unid.
-            { wch: 15 }, // Custo
-            { wch: 15 }, // Venda
-            { wch: 20 }  // Lucro
-        ];
-        worksheet['!cols'] = colWidths;
-
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Estoque Geral");
-        
-        // Baixa o arquivo
-        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-        XLSX.writeFile(workbook, `Estoque_Mercearia_${dataHoje}.xlsx`);
+        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, "-");
+        XLSX.writeFile(wb, `Estoque-${dataHoje}.xlsx`);
     };
 
+    // === FILTROS ===
+    const produtosFiltrados = produtos.filter(prod => {
 
-    // --- 5. LÓGICA DE FILTRAGEM (ATUALIZADA COM %) ---
-    const produtosFiltrados = produtos.filter(produto => {
-        // 1. Filtro de Categoria
-        let categoriaMatch = false;
-        if (categoriaAtiva === 'todos') {
-            categoriaMatch = true;
-        } else if (categoriaAtiva === 'sem_categoria') {
-            categoriaMatch = !produto.categoria_id;
-        } else {
-            categoriaMatch = produto.categoria_id === categoriaAtiva;
-        }
+        let categoriaOK = false;
+        if (categoriaAtiva === "todos") categoriaOK = true;
+        else if (categoriaAtiva === "sem_categoria") categoriaOK = !prod.categoria_id;
+        else categoriaOK = prod.categoria_id === categoriaAtiva;
 
-        // 🎯 2. Filtro de Busca (AGORA SUPORTA WILDCARD %)
-        let buscaMatch = true;
-        const termoLimpo = termoBusca.trim();
-        
-        if (termoLimpo.length > 0) {
-            const lowerTermo = normalizeText(termoLimpo);
-            const nome = normalizeText(produto.nome);
-            const codigo = produto.codigo_barras ? produto.codigo_barras.toLowerCase() : '';
+        let buscaOK = true;
+        const busca = normalizeText(termoBusca).trim();
 
-            // Se tem '%' na busca, usamos lógica de Regex
-            if (lowerTermo.includes('%')) {
-                // Transforma "sab%po" em "sab.*po" para Regex
-                // Escapa caracteres especiais de regex, exceto o %
-                const regexPattern = lowerTermo
-                    .split('%')
-                    .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // Escape seguro
-                    .join('.*'); // O % vira "qualquer coisa no meio"
-                
-                const regex = new RegExp(regexPattern, 'i'); // 'i' para case-insensitive
-                
-                // Busca no nome (o código de barras geralmente é exato, mas podemos incluir)
-                buscaMatch = regex.test(nome) || regex.test(codigo);
+        if (busca.length > 0) {
+            const nome = normalizeText(prod.nome);
+            const codigo = prod.codigo_barras?.toLowerCase() || "";
+
+            if (busca.includes("%")) {
+                const regexPattern = busca
+                    .split("%")
+                    .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+                    .join(".*");
+
+                const regex = new RegExp(regexPattern, "i");
+                buscaOK = regex.test(nome) || regex.test(codigo);
 
             } else {
-                // Busca normal (contém o texto)
-                buscaMatch = nome.includes(lowerTermo) || codigo.includes(lowerTermo);
+                buscaOK = nome.includes(busca) || codigo.includes(busca);
             }
         }
 
-        return categoriaMatch && buscaMatch;
+        return categoriaOK && buscaOK;
     });
+
     const produtosSemCategoria = produtos.filter(p => !p.categoria_id).length;
 
-
-    // --- RENDERIZAÇÃO ---
-    if (loading) {
-        return <div>Carregando produtos e categorias...</div>;
-    }
+    // === RENDER ===
+    if (loading) return <div>Carregando produtos...</div>;
 
     return (
         <div className="estoque-layout-container">
-            
-            {/* --- MODAIS (flutuam sobre tudo) --- */}
+
+            {/* Modais */}
             {isModalOpen && (
                 <ProdutoModal 
                     merceariaId={merceariaId}
-                    onClose={fecharModal}
+                    onClose={() => { setIsModalOpen(false); setProdutoSelecionado(null); }}
+                    produtoParaEditar={produtoSelecionado}
                     onProdutoSalvo={handleProdutoSalvo}
-                    produtoParaEditar={produtoSelecionado} 
                 />
             )}
+
             {isCategoriaModalOpen && (
                 <CategoriaModal
                     merceariaId={merceariaId}
                     onClose={() => setIsCategoriaModalOpen(false)}
-                    onCategoriaSalva={() => {
-                        fetchData(); 
-                        setIsCategoriaModalOpen(false);
-                    }}
+                    onCategoriaSalva={() => { fetchData(); setIsCategoriaModalOpen(false); }}
                 />
             )}
 
-            {/* --- 1. COLUNA DA ESQUERDA (CATEGORIAS) --- */}
-            <nav className="estoque-sidebar-categorias no-print"> {/* 🎯 ADD no-print */}
+            {/* Sidebar categorias */}
+            <nav className="estoque-sidebar-categorias no-print">
                 <h4>Categorias</h4>
-                <a 
+
+                <a
                     href="#todos"
-                    className={`cat-filtro-item ${categoriaAtiva === 'todos' ?
-                        'active' : ''}`}
-                    onClick={(e) => { e.preventDefault();
-                        setCategoriaAtiva('todos'); }}
+                    className={`cat-filtro-item ${categoriaAtiva === "todos" ? "active" : ""}`}
+                    onClick={(e) => { e.preventDefault(); setCategoriaAtiva("todos"); }}
                 >
-                    Todos os Produtos
-                    <span>{produtos.length}</span>
+                    Todos os Produtos <span>{produtos.length}</span>
                 </a>
-                
+
                 {categorias.map(cat => (
-                    <a 
+                    <a
                         key={cat.id}
                         href={`#${cat.id}`}
-                        className={`cat-filtro-item ${categoriaAtiva === cat.id ? 'active' : ''}`}
+                        className={`cat-filtro-item ${categoriaAtiva === cat.id ? "active" : ""}`}
                         onClick={(e) => { e.preventDefault(); setCategoriaAtiva(cat.id); }}
                     >
                         {cat.nome}
@@ -320,115 +262,100 @@ const ProdutoList = ({ merceariaId, shouldFocusSearch, onFocusHandled }) => {
                 ))}
 
                 {produtosSemCategoria > 0 && (
-                    <a 
+                    <a
                         href="#sem_categoria"
-                        className={`cat-filtro-item ${categoriaAtiva === 'sem_categoria' ? 'active' : ''}`}
-                        onClick={(e) => { e.preventDefault(); setCategoriaAtiva('sem_categoria');
-                        }}
+                        className={`cat-filtro-item ${categoriaAtiva === "sem_categoria" ? "active" : ""}`}
+                        onClick={(e)=>{e.preventDefault(); setCategoriaAtiva("sem_categoria");}}
                     >
-                        Sem Categoria
-                        <span>{produtosSemCategoria}</span>
+                        Sem Categoria <span>{produtosSemCategoria}</span>
                     </a>
                 )}
             </nav>
 
+            {/* Main */}
+            <main className="estoque-main-content">
 
-<main className="estoque-main-content">
-    
-    {/* Header da Direita (Busca e Botões) */}
-    <div className="estoque-header no-print"> {/* 🎯 Agora é Grid: Input e Botoes */}
-        
-        {/* INPUT DE BUSCA */}
-        <input 
-            ref={searchInputRef} // 🎯 REF DO F7
-            type="text"
-            placeholder="Buscar produtos por nome ou código..."
-            className="estoque-busca-input"
-            value={termoBusca}
-            onChange={(e) => setTermoBusca(e.target.value)}
-        />
-        
-        {/* GRUPO DE BOTÕES */}
-        <div className="header-botoes">
-            <button className="btn-adicionar" onClick={handleExportarExcel} style={{ backgroundColor: '#217346', marginRight: '10px' }} title="Baixar Planilha Excel">
-                📥 Excel
-            </button>
-            
-            <button className="btn-adicionar" onClick={handleImprimir} style={{ backgroundColor: '#6c757d', marginRight: '10px' }} title="Imprimir Tela">
-                🖨️
-            </button>
-            
-            <button className="btn-adicionar btn-categoria" onClick={() => setIsCategoriaModalOpen(true)}>
-                + Nova Categoria
-            </button>
-            <button className="btn-adicionar" onClick={abrirModalAdicionar}>
-                + Adicionar Produto
-            </button>
-        </div>
-    </div>
-    {/* ... o restante do JSX do main content ... */}
+                {/* Header */}
+                <div className="estoque-header no-print">
+
+                    <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Buscar produtos por nome ou código..."
+                        className="estoque-busca-input"
+                        value={termoBusca}
+                        onChange={(e) => setTermoBusca(e.target.value)}
+                    />
+
+                    <div className="header-botoes">
+
+                        <button className="btn-adicionar" onClick={handleExportarExcel} style={{ backgroundColor: "#217346" }}>
+                            📥 Excel
+                        </button>
+
+                        <button className="btn-adicionar" onClick={() => window.print()} style={{ backgroundColor: "#6c757d" }}>
+                            🖨️
+                        </button>
+
+                        <button className="btn-adicionar btn-categoria"
+                                onClick={() => setIsCategoriaModalOpen(true)}>
+                            + Nova Categoria
+                        </button>
+
+                        <button className="btn-adicionar" onClick={() => { setProdutoSelecionado(null); setIsModalOpen(true); }}>
+                            + Adicionar Produto
+                        </button>
+
+                    </div>
+                </div>
 
                 {error && <p className="estoque-error">Erro: {error}</p>}
 
-                {/* Grid de Produtos */}
+                {/* GRID */}
                 <div className="estoque-grid-produtos">
-                    {produtosFiltrados.length === 0 ?
-                        (
+                    {produtosFiltrados.length === 0 ? (
                         <div className="estoque-vazio">
                             <p>Nenhum produto encontrado.</p>
-                            <small>Tente ajustar os filtros de busca ou categoria.</small>
                         </div>
                     ) : (
                         produtosFiltrados.map(produto => (
-                            <ProdutoCard 
+                            <ProdutoCard
                                 key={produto.id}
                                 produto={produto}
-                                onEditar={abrirModalEditar}
+                                onEditar={(p)=>{ setProdutoSelecionado(p); setIsModalOpen(true); }}
                                 onDeletar={handleDeletarProduto}
                                 isFocado={produto.id === produtoFocadoId}
                             />
                         ))
                     )}
                 </div>
+
             </main>
+
         </div>
     );
 };
 
-
-// -------------------------------------------------------------------
-// --- SUB-COMPONENTE: ProdutoCard ---
-// -------------------------------------------------------------------
+// === ProdutoCard ===
 const ProdutoCard = ({ produto, onEditar, onDeletar, isFocado }) => {
-    
-    // Lógica do Semáforo de Estoque
-    let statusClasse = 'estoque-ok';
+
+    let statusClasse = "estoque-ok";
     const estoque = parseFloat(produto.estoque_atual);
     const minimo = parseFloat(produto.estoque_minimo);
-    
-    if (estoque <= 0) {
-        statusClasse = 'estoque-critico';
-    } else if (estoque <= minimo) {
-        statusClasse = 'estoque-baixo';
-    }
+
+    if (estoque <= 0) statusClasse = "estoque-critico";
+    else if (estoque <= minimo) statusClasse = "estoque-baixo";
 
     return (
-        <div 
-            id={`produto-card-${produto.id}`} 
-            className={`produto-card-novo ${isFocado ? 'focado' : ''}`}
-        >
+        <div id={`produto-card-${produto.id}`} className={`produto-card-novo ${isFocado ? "focado" : ""}`}>
+
             <div className="card-corpo" onClick={() => onEditar(produto)}>
                 <span className={`card-status-estoque ${statusClasse}`}>
                     {formatarEstoque(produto.estoque_atual, produto.unidade_medida)}
                 </span>
-                
-                <div className="card-nome-produto">
-                    {produto.nome}
-                </div>
-                
-                <div className="card-codigo-produto">
-                    {produto.codigo_barras || 'Sem código'}
-                </div>
+
+                <div className="card-nome-produto">{produto.nome}</div>
+                <div className="card-codigo-produto">{produto.codigo_barras || "Sem código"}</div>
 
                 <div className="card-precos">
                     <div className="preco-item">
@@ -442,15 +369,11 @@ const ProdutoCard = ({ produto, onEditar, onDeletar, isFocado }) => {
                 </div>
             </div>
 
-            {/* 🎯 ADD no-print */}
             <div className="card-acoes no-print">
-                <button className="btn-acao-card btn-editar" onClick={() => onEditar(produto)}>
-                    Editar
-                </button>
-                <button className="btn-acao-card btn-excluir" onClick={() => onDeletar(produto.id)}>
-                    Excluir
-                </button>
+                <button className="btn-acao-card btn-editar" onClick={() => onEditar(produto)}>Editar</button>
+                <button className="btn-acao-card btn-excluir" onClick={() => onDeletar(produto.id)}>Excluir</button>
             </div>
+
         </div>
     );
 };

@@ -1,36 +1,33 @@
 import React, { useState } from 'react';
-// REMOVIDA A IMPORTAÇÃO DIRETA: import { supabase } from '../utils/supabaseClient'; 
 
-// Variável de controle do Backend (Ajuste se necessário)
-const BACKEND_BASE_URL = 'http://localhost:3001'; 
-// const BACKEND_BASE_URL = 'https://mercearia-api.onrender.com'; // Para Produção
+// ❗ NÃO usa mais BACKEND_BASE_URL fixo aqui
+// Agora vem do App.jsx via props
 
-// Componente agora recebe 'supabaseProp' do App.jsx
-const Auth = ({ supabaseProp }) => {
-    // Usa a prop em vez da importação
-    const supabase = supabaseProp; 
+const Auth = ({ supabaseProp, BACKEND_BASE_URL }) => {
+    const supabase = supabaseProp;
 
     // --- ESTADOS ---
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const [isSignUp, setIsSignUp] = useState(true); 
+    const [isSignUp, setIsSignUp] = useState(true);
 
-    // --- ESTADOS PARA REGISTRO DA MERCEARIA ---
-    const [userId, setUserId] = useState(null); 
-    const [showNomeFantasiaInput, setShowNomeFantasiaInput] = useState(false); 
-    const [nomeFantasia, setNomeFantasia] = useState(''); 
+    // Cadastro da mercearia
+    const [userId, setUserId] = useState(null);
+    const [showNomeFantasiaInput, setShowNomeFantasiaInput] = useState(false);
+    const [nomeFantasia, setNomeFantasia] = useState('');
 
-    // --- 1. FUNÇÃO DE REGISTRO/LOGIN DO USUÁRIO (FRONT-END -> SUPABASE) ---
+    // ---------------------------------------------------------
+    // 1. LOGIN / SIGNUP COM SUPABASE
+    // ---------------------------------------------------------
     const handleAuth = async (e) => {
         e.preventDefault();
         setLoading(true);
         setMessage('');
 
-        // Validação crítica (garante que o cliente Supabase foi passado e está pronto)
         if (!supabase || !supabase.auth) {
-            setMessage('Erro crítico: Cliente Supabase não inicializado. Recarregue a página.');
+            setMessage('Erro crítico: Supabase não inicializado.');
             setLoading(false);
             return;
         }
@@ -43,123 +40,184 @@ const Auth = ({ supabaseProp }) => {
             } else {
                 result = await supabase.auth.signInWithPassword({ email, password });
             }
-            
+
             const { error, data } = result;
 
             if (error) {
                 setMessage('Erro de Autenticação: ' + error.message);
             } else {
-                if (isSignUp && data.user) { 
-                    setUserId(data.user.id); 
-                    setShowNomeFantasiaInput(true); 
-                    setMessage('✅ Usuário criado com sucesso! Agora, informe o nome da sua mercearia.');
-                    setEmail(''); 
+                if (isSignUp && data.user) {
+                    setUserId(data.user.id);
+                    setShowNomeFantasiaInput(true);
+                    setMessage('Usuário criado! Agora informe o nome da mercearia.');
+
+                    setEmail('');
                     setPassword('');
                 } else if (!isSignUp && data.session) {
-                    setMessage('✅ Login efetuado com sucesso!');
-                    // O App.jsx detectará esta sessão e mudará para o Dashboard
+                    setMessage('Login efetuado com sucesso!');
                 }
             }
-        } catch (error) { 
-            console.error("ERRO REAL DO CATCH em handleAuth:", error); 
-            setMessage('Erro desconhecido durante a autenticação.');
+        } catch (err) {
+            console.error("Erro no handleAuth:", err);
+            setMessage('Erro desconhecido na autenticação.');
         } finally {
             setLoading(false);
         }
     };
 
-    // --- 2. FUNÇÃO DE REGISTRO DA MERCEARIA (FRONT-END -> NODE.JS BACKEND) ---
+    // ---------------------------------------------------------
+    // 2. REGISTRO DA MERCEARIA NO BACKEND NODE.JS
+    // ---------------------------------------------------------
     const handleRegisterMercearia = async (e) => {
         e.preventDefault();
-        if (!userId || !nomeFantasia) {
-            setMessage('Erro interno: Falha ao obter o ID do usuário.');
-            return;
-        }
-        setLoading(true);
         setMessage('');
 
-        try {
-            const backendUrl = `${BACKEND_BASE_URL}/api/mercearias/register`; 
+        if (!userId || !nomeFantasia.trim()) {
+            setMessage('Informe o nome da mercearia.');
+            return;
+        }
 
-            const response = await fetch(backendUrl, {
+        setLoading(true);
+
+        try {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/mercearias/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId, nomeFantasia: nomeFantasia }),
+                body: JSON.stringify({
+                    userId,
+                    nomeFantasia: nomeFantasia.trim(),
+                }),
             });
 
-            const result = await response.json(); 
+            const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || `Erro HTTP: ${response.status}`);
+                throw new Error(result.error || 'Erro ao registrar mercearia.');
             }
 
-            // Sucesso!
-            setMessage('✅ Mercearia registrada com sucesso! Você já pode fazer o Login.');
-            setShowNomeFantasiaInput(false); 
-            setIsSignUp(false); 
-            setUserId(null); 
+            // Sucesso
+            setMessage('Mercearia registrada! Agora você pode fazer login.');
+            setShowNomeFantasiaInput(false);
+            setUserId(null);
+            setIsSignUp(false);
 
-        } catch (error) {
-            console.error("Erro ao registrar mercearia:", error);
-            setMessage(`Erro ao registrar mercearia: ${error.message}.`);
+        } catch (err) {
+            console.error(err);
+            setMessage(`Erro ao registrar mercearia: ${err.message}`);
         } finally {
             setLoading(false);
         }
     };
 
-    // --- ESTRUTURA VISUAL (JSX) ---
+    // ---------------------------------------------------------
+    // 3. INTERFACE
+    // ---------------------------------------------------------
     return (
-        <div style={{ padding: '20px', border: '1px solid #ccc', maxWidth: '400px', margin: '50px auto' }}>
+        <div style={{
+            padding: '20px',
+            border: '1px solid #ccc',
+            maxWidth: '400px',
+            margin: '50px auto',
+            borderRadius: '6px'
+        }}>
             <h3>{isSignUp ? "CADASTRAR NOVA MERCEARIA" : "FAZER LOGIN"}</h3>
-            
-            {/* 1. FORMULÁRIO DE USUÁRIO */}
+
+            {/* FORM LOGIN / SIGNUP */}
             {!showNomeFantasiaInput && (
                 <form onSubmit={handleAuth}>
-                    <input 
-                        type="email" placeholder="Email (Login)" value={email} 
-                        onChange={(e) => setEmail(e.target.value)} required
-                        style={{ display: 'block', margin: '10px 0', padding: '8px', width: '100%' }}
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        required
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={{ width: '100%', margin: '10px 0', padding: '8px' }}
                     />
-                    <input 
-                        type="password" placeholder="Senha (mín. 6 caracteres)" value={password} 
-                        onChange={(e) => setPassword(e.target.value)} required
-                        style={{ display: 'block', margin: '10px 0', padding: '8px', width: '100%' }}
+
+                    <input
+                        type="password"
+                        placeholder="Senha (min 6 caracteres)"
+                        value={password}
+                        required
+                        onChange={(e) => setPassword(e.target.value)}
+                        style={{ width: '100%', margin: '10px 0', padding: '8px' }}
                     />
-                    <button type="submit" disabled={loading} style={{ padding: '10px', width: '100%', cursor: 'pointer', backgroundColor: isSignUp ? '#4CAF50' : '#007bff' }}>
-                        {loading ? 'Processando...' : (isSignUp ? 'CADASTRAR USUÁRIO' : 'ENTRAR NO SISTEMA')}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                            width: '100%',
+                            padding: '10px',
+                            background: isSignUp ? '#2ecc71' : '#2980b9',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {loading ? 'Processando...' : isSignUp ? 'Cadastrar Usuário' : 'Entrar'}
                     </button>
                 </form>
             )}
 
-            {/* 2. FORMULÁRIO DE NOME FANTASIA */}
+            {/* FORM NOME FANTASIA */}
             {showNomeFantasiaInput && (
-                <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                    <h4>Nome da Mercearia (Finalizar)</h4>
-                    <form onSubmit={handleRegisterMercearia}> 
+                <div style={{ marginTop: '20px' }}>
+                    <h4>Nome da Mercearia</h4>
+
+                    <form onSubmit={handleRegisterMercearia}>
                         <input
-                            type="text" placeholder="Nome Fantasia da Mercearia" value={nomeFantasia}
-                            onChange={(e) => setNomeFantasia(e.target.value)} required
-                            style={{ display: 'block', margin: '10px 0', padding: '8px', width: '100%' }}
+                            type="text"
+                            placeholder="Nome Fantasia"
+                            value={nomeFantasia}
+                            required
+                            onChange={(e) => setNomeFantasia(e.target.value)}
+                            style={{ width: '100%', margin: '10px 0', padding: '8px' }}
                         />
-                        <button type="submit" disabled={loading} style={{ padding: '10px', width: '100%', cursor: 'pointer', backgroundColor: '#FFC107', color: 'black' }}>
-                            {loading ? 'Registrando...' : 'CONCLUIR CADASTRO'}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                background: '#f1c40f',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {loading ? 'Registrando...' : 'Concluir Cadastro'}
                         </button>
                     </form>
                 </div>
             )}
-            
-            {message && <p style={{ color: message.startsWith('✅') ? 'green' : 'red', marginTop: '15px' }}>{message}</p>}
 
-            {/* 3. BOTÃO DE ALTERNAR */}
+            {/* MENSAGEM */}
+            {message && (
+                <p style={{
+                    marginTop: '15px',
+                    color: message.startsWith('Erro') ? 'red' : 'green'
+                }}>
+                    {message}
+                </p>
+            )}
+
+            {/* BOTÃO TROCAR MODO */}
             {!showNomeFantasiaInput && (
-                <button 
+                <button
                     onClick={() => {
                         setIsSignUp(!isSignUp);
                         setMessage('');
                     }}
-                    style={{ marginTop: '15px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+                    style={{
+                        marginTop: '15px',
+                        background: 'none',
+                        border: 'none',
+                        color: 'blue',
+                        cursor: 'pointer',
+                    }}
                 >
-                    {isSignUp ? 'Já sou cliente (Fazer Login)' : 'Novo cliente (Cadastrar)'}
+                    {isSignUp ? 'Já tenho conta → Login' : 'Criar nova conta'}
                 </button>
             )}
         </div>

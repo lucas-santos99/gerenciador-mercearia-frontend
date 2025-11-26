@@ -1,26 +1,43 @@
 import React, { useState, useEffect } from 'react';
 
-// Formata um número para moeda brasileira
+// BACKEND AUTOMÁTICO (LOCAL VS PRODUÇÃO)
+const BACKEND_BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3001"
+        : "https://mercearia-api.onrender.com";
+
+// Formata moeda brasileira
 const formatCurrency = (value) => {
-    return (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return (value || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    });
 };
 
-const ResumoFinanceiro = ({ merceariaId, BACKEND_BASE_URL }) => {
+const ResumoFinanceiro = ({ merceariaId }) => {
+
     const [resumo, setResumo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+
         const fetchResumo = async () => {
             setLoading(true);
+            setError(null);
+
             try {
-                // Chama a rota de resumo atualizada
-                const response = await fetch(`${BACKEND_BASE_URL}/api/financeiro/resumo/${merceariaId}`);
+                const response = await fetch(
+                    `${BACKEND_BASE_URL}/api/financeiro/resumo/${encodeURIComponent(merceariaId)}`
+                );
+
                 if (!response.ok) {
                     throw new Error('Falha ao buscar resumo do caixa.');
                 }
+
                 const data = await response.json();
                 setResumo(data);
+
             } catch (err) {
                 console.error("Erro ao buscar resumo:", err);
                 setError(err.message);
@@ -29,10 +46,11 @@ const ResumoFinanceiro = ({ merceariaId, BACKEND_BASE_URL }) => {
             }
         };
 
-        if (merceariaId) {
-            fetchResumo();
-        }
-    }, [merceariaId, BACKEND_BASE_URL]);
+        if (merceariaId) fetchResumo();
+
+    }, [merceariaId]);
+
+    // ======== RENDER =========
 
     if (loading) {
         return <div className="loading-card">Carregando resumo financeiro...</div>;
@@ -48,30 +66,39 @@ const ResumoFinanceiro = ({ merceariaId, BACKEND_BASE_URL }) => {
 
     return (
         <div className="resumo-dashboard">
+            
             <h4 className="resumo-subtitle">Situação de Hoje e Pendências</h4>
+
             <div className="resumo-grid">
                 
-                {/* Cartão 1: Total de Vendas (Entradas) no Dia */}
+                {/* Total de Vendas do Dia */}
                 <div className="resumo-card highlight-card">
                     <p className="card-title">Vendas (Entradas) do Dia</p>
-                    <p className="card-value total-entrada">{formatCurrency(resumo.total_entradas_dia)}</p>
+                    <p className="card-value total-entrada">
+                        {formatCurrency(resumo.total_entradas_dia)}
+                    </p>
                 </div>
 
-                {/* Cartão 2: Fiado (Contas a Receber) Pendente */}
+                {/* Fiado Pendente */}
                 <div className="resumo-card info-card">
                     <p className="card-title">Fiado Pendente</p>
-                    <p className="card-value total-receber">{formatCurrency(resumo.total_fiado_pendente)}</p>
+                    <p className="card-value total-receber">
+                        {formatCurrency(resumo.total_fiado_pendente)}
+                    </p>
                 </div>
 
-                {/* Cartão 3: Contas a Pagar Pendente */}
+                {/* Contas a pagar */}
                 <div className="resumo-card danger-card">
                     <p className="card-title">Contas a Pagar Pendente</p>
-                    <p className="card-value total-pagar">{formatCurrency(resumo.total_contas_pagar_pendente)}</p>
+                    <p className="card-value total-pagar">
+                        {formatCurrency(resumo.total_contas_pagar_pendente)}
+                    </p>
                 </div>
 
             </div>
 
             <h4 className="resumo-subtitle mt-8">Detalhamento das Entradas do Dia</h4>
+
             <div className="resumo-grid detalhes-grid">
                 {Object.entries(resumo.meios_pagamento).map(([meio, valor]) => (
                     <div key={meio} className="detail-card">
@@ -80,6 +107,7 @@ const ResumoFinanceiro = ({ merceariaId, BACKEND_BASE_URL }) => {
                     </div>
                 ))}
             </div>
+
         </div>
     );
 };

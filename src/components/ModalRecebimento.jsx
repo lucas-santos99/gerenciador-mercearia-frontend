@@ -1,4 +1,4 @@
-// ===== ModalRecebimento.jsx (LIMPO e Sem clique fora) ========
+// ===== ModalRecebimento.jsx (FINAL CORRIGIDO) ========
 import React, { useState, useEffect, useRef } from 'react';
 import './ModalRecebimento.css';
 
@@ -19,25 +19,28 @@ const ModalRecebimento = ({ cliente, onClose, onConfirm }) => {
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
     const paymentMethods = [
         { key: 'Dinheiro', label: 'Dinheiro' },
         { key: 'Pix', label: 'Pix' },
         { key: 'Debito', label: 'Débito' },
         { key: 'Credito', label: 'Crédito' }
     ];
+
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [meioPagamento, setMeioPagamento] = useState('Dinheiro');
-    
-    const modalRef = useRef(null);
-    const inputValorRef = useRef(null);
-    const pagamentoListaRef = useRef(null); 
-    const btnConfirmarRef = useRef(null); 
 
+    const inputValorRef = useRef(null);
+    const pagamentoListaRef = useRef(null);
+    const btnConfirmarRef = useRef(null);
+
+    // Foca no input ao abrir
     useEffect(() => {
         inputValorRef.current?.focus();
         inputValorRef.current?.select();
     }, []);
 
+    // Scroll suave na lista
     useEffect(() => {
         if (!pagamentoListaRef.current) return;
         const item = pagamentoListaRef.current.children[selectedIndex];
@@ -46,59 +49,75 @@ const ModalRecebimento = ({ cliente, onClose, onConfirm }) => {
         }
     }, [selectedIndex]);
 
+    // ========== CONTROLE DE TECLAS ==========
     const handleKeyDown = (e) => {
+
+        // Fechar com ESC (global)
         if (e.key === 'Escape') {
             e.preventDefault();
             onClose();
             return;
         }
 
+        // Dentro do input
         if (document.activeElement === inputValorRef.current) {
+
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 pagamentoListaRef.current?.focus();
+                return;
             }
+
             if (e.key === 'Enter') {
                 e.preventDefault();
-                if (parseFloat(valorPago.toString().replace(',', '.')) > 0) {
-                    pagamentoListaRef.current?.focus();
-                }
+                pagamentoListaRef.current?.focus();
+                return;
             }
-        } 
-        else if (document.activeElement === pagamentoListaRef.current) {
+        }
+
+        // Dentro da lista UL
+        if (document.activeElement === pagamentoListaRef.current) {
+
             if (e.key === 'ArrowDown') {
-                 e.preventDefault();
+                e.preventDefault();
                 const newIndex = (selectedIndex + 1) % paymentMethods.length;
                 setSelectedIndex(newIndex);
                 setMeioPagamento(paymentMethods[newIndex].key);
-            } 
-            else if (e.key === 'ArrowUp') {
+                return;
+            }
+
+            if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 const newIndex = (selectedIndex - 1 + paymentMethods.length) % paymentMethods.length;
                 setSelectedIndex(newIndex);
                 setMeioPagamento(paymentMethods[newIndex].key);
+                return;
             }
-            else if (e.key === 'Enter') {
+
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 btnConfirmarRef.current?.focus();
+                return;
             }
         }
     };
 
+    // ========== SUBMIT ==========
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        
+
         const valorFloat = parseFloat(valorPago.toString().replace(',', '.'));
-        
+
         if (isNaN(valorFloat) || valorFloat <= 0) {
-            setError('Valor de pagamento inválido.');
+            setError('Valor inválido.');
             inputValorRef.current?.focus();
             return;
         }
+
         if (valorFloat > saldoDevedor + 0.01) {
-             setError('O valor pago não pode ser maior que a dívida atual.');
-             inputValorRef.current?.focus();
+            setError('Valor não pode exceder a dívida.');
+            inputValorRef.current?.focus();
             return;
         }
 
@@ -114,40 +133,46 @@ const ModalRecebimento = ({ cliente, onClose, onConfirm }) => {
     };
 
     return (
-        <div className="recebimento-modal-overlay"> 
-            <div className="recebimento-modal-content" ref={modalRef}>
+        <div className="recebimento-modal-overlay">
+            
+            {/* BLOQUEIA CLIQUE FORA */}
+            <div 
+                className="recebimento-modal-content"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <h3>Receber Pagamento de {cliente.nome}</h3>
                 <p>Dívida Atual: <strong>{formatCurrency(saldoDevedor)}</strong></p>
 
                 <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
+                    
+                    {/* INPUT */}
                     <div className="form-group">
-                        <label htmlFor="valor-pago">Valor a Receber (R$) (Enter ↴)</label>
+                        <label>Valor a Receber (Enter ↵)</label>
                         <input
-                            id="valor-pago"
                             ref={inputValorRef}
                             type="text"
-                            max={saldoDevedor}
                             value={valorPago}
                             onChange={(e) => setValorPago(e.target.value)}
                             disabled={loading}
                         />
                     </div>
 
+                    {/* LISTA DE MÉTODOS */}
                     <div className="form-group">
-                        <label>Meio de Pagamento (⬆️ ⬇️ Enter ↴)</label>
+                        <label>Meio de Pagamento (⬆️ ⬇️)</label>
                         <ul 
-                            className="recebimento-meios-lista" 
-                            ref={pagamentoListaRef} 
+                            className="recebimento-meios-lista"
+                            ref={pagamentoListaRef}
                             tabIndex={0}
                         >
                             {paymentMethods.map((metodo, index) => (
-                                <li 
+                                <li
                                     key={metodo.key}
                                     className={`btn-meio-pagamento ${selectedIndex === index ? 'active' : ''}`}
                                     onClick={() => {
                                         setSelectedIndex(index);
                                         setMeioPagamento(metodo.key);
-                                        btnConfirmarRef.current?.focus(); 
+                                        btnConfirmarRef.current?.focus();
                                     }}
                                 >
                                     {metodo.label}
@@ -159,14 +184,15 @@ const ModalRecebimento = ({ cliente, onClose, onConfirm }) => {
 
                     {error && <p className="recebimento-modal-error">{error}</p>}
 
+                    {/* BOTÕES */}
                     <div className="recebimento-modal-actions">
                         <button type="button" onClick={onClose} className="btn-cancel" disabled={loading}>
-                             Cancelar (Esc)
+                            Cancelar (Esc)
                         </button>
                         <button 
                             ref={btnConfirmarRef}
-                            type="submit" 
-                            className="btn-confirmar" 
+                            type="submit"
+                            className="btn-confirmar"
                             disabled={loading}
                         >
                             {loading ? 'Processando...' : 'Confirmar (Enter)'}

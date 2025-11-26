@@ -1,41 +1,49 @@
-import React from 'react';
+// ===== TelaBloqueio.jsx (VERSÃO OTIMIZADA) =====
+import React, { useEffect, useRef } from 'react';
+import './TelaBloqueio.css'; // Arquivo opcional (posso gerar se quiser)
 
-// Esta tela recebe a função de Logout do App.jsx
-const TelaBloqueio = ({ onLogout }) => {
+const TelaBloqueio = ({ onLogout, nomeFantasia }) => {
+    
+    const btnRef = useRef(null);
+
+    // Foca automaticamente no botão para acessibilidade
+    useEffect(() => {
+        btnRef.current?.focus();
+    }, []);
+
+    // Permitir sair com Enter ou Esc
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            onLogout();
+        }
+    };
+
     return (
-        <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            height: '100vh', 
-            backgroundColor: '#f8d7da', 
-            color: '#721c24',
-            padding: '20px',
-            textAlign: 'center'
-        }}>
+        <div className="bloqueio-container" onKeyDown={handleKeyDown} tabIndex={0}>
+            
             <h2>Acesso Bloqueado</h2>
-            <p style={{ fontSize: '1.2rem', maxWidth: '500px' }}>
-                Sua assinatura expirou ou não foi paga. 
-                Por favor, entre em contato com o administrador do sistema para regularizar sua situação.
+
+            <p className="bloqueio-msg">
+                A assinatura da mercearia <strong>{nomeFantasia || "do usuário"}</strong> 
+                expirou ou não foi paga.
             </p>
-            <p>
-                <strong>(Seu Nome/Contato)</strong>
+
+            <p className="bloqueio-info">
+                Entre em contato para regularizar sua situação.
             </p>
+
+            {/* Exibir contato fixo OU configurável futuramente */}
+            <p className="bloqueio-contato">
+                <strong>WhatsApp: (00) 00000-0000</strong>
+            </p>
+
             <button 
-                onClick={onLogout} 
-                style={{ 
-                    marginTop: '20px', 
-                    padding: '10px 20px', 
-                    fontSize: '1rem', 
-                    color: 'white', 
-                    backgroundColor: '#721c24', 
-                    border: 'none', 
-                    borderRadius: '5px', 
-                    cursor: 'pointer' 
-                }}
+                ref={btnRef}
+                className="bloqueio-btn"
+                onClick={onLogout}
             >
-                Sair
+                Sair da Conta
             </button>
         </div>
     );
