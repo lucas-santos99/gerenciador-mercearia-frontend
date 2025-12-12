@@ -12,22 +12,32 @@ export default function NovaSenha() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    async function handleRecovery() {
+      const urlParams = new URLSearchParams(window.location.search);
 
-    const type = urlParams.get("type");
-    const token = urlParams.get("access_token");
+      const type = urlParams.get("type");
+      const token = urlParams.get("access_token");
 
-    if (type === "recovery" && token) {
-      // Supabase automaticamente ajusta a sessão com o token
-      supabase.auth.setSession({
-        access_token: token,
-        refresh_token: token,
-      });
+      // Se não vier token ou type incorreto
+      if (type !== "recovery" || !token) {
+        setErrorMsg("Link inválido ou expirado.");
+        return;
+      }
 
+      // Tentar ativar o token usando Supabase v2
+      const { data, error } = await supabase.auth.exchangeCodeForSession(token);
+
+      if (error) {
+        console.error("Erro ao validar token:", error);
+        setErrorMsg("Link inválido ou expirado.");
+        return;
+      }
+
+      // Token aceito → agora podemos exibir o formulário
       setTokenLoaded(true);
-    } else {
-      setErrorMsg("Link inválido ou expirado.");
     }
+
+    handleRecovery();
   }, []);
 
   async function handleSubmit(e) {
@@ -45,6 +55,7 @@ export default function NovaSenha() {
     });
 
     if (error) {
+      console.error(error);
       setErrorMsg("Erro ao atualizar senha. Tente novamente.");
       return;
     }
@@ -97,6 +108,7 @@ export default function NovaSenha() {
             Senha atualizada com sucesso! Redirecionando...
           </p>
         )}
+
       </div>
     </div>
   );
