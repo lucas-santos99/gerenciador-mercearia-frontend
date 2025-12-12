@@ -1,0 +1,64 @@
+/* SIDEBAR PRINCIPAL */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background: #0d1117;
+  color: white;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.25);
+}
+
+/* LOGO PROFISSIONAL */
+.sidebar-logo {
+  font-size: 22px;
+  margin-bottom: 40px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.logo-primary {
+  color: #0adfc4;
+  font-size: 26px;
+}
+
+.logo-secondary {
+  color: #8b949e;
+  margin-top: -2px;
+}
+
+/* MENU */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 18px;
+  border-left: 3px solid transparent;
+  padding-left: 10px;
+  transition: 0.2s;
+}
+
+.sidebar-menu li.active {
+  border-left-color: #0adfc4;
+}
+
+.sidebar-menu li a {
+  color: #8b949e;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+/* HOVER + ATIVO */
+.sidebar-menu li.active a,
+.sidebar-menu li a:hover {
+  color: #0adfc4;
+  text-shadow: 0 0 6px rgba(10, 223, 196, 0.4);
+}

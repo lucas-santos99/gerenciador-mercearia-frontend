@@ -1,161 +1,183 @@
-// ===== App.jsx (CORRIGIDO 2025) =====
-import React, { useState, useEffect } from 'react';
-import Auth from './components/Auth';
-import Dashboard from './components/Dashboard';
-import TelaBloqueio from './components/TelaBloqueio'; 
-import { createSupabaseClient } from './utils/supabaseClient'; 
-import './App.css'; 
+// ===== App.jsx — Rotas Reais + ProtectedRoute + RoleRoute + Redirecionamento Global =====
+import React from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
-// Seleciona automaticamente o backend correto (local vs produção)
-const BACKEND_BASE_URL =
-    window.location.hostname === "localhost"
-        ? "http://localhost:3001"
-        : "https://mercearia-api.onrender.com";
+// Telas
+import Login from "./components/Login/Login";
+import TelaBloqueio from "./components/TelaBloqueio";
 
-// FUNÇÃO HELPER
-const addCacheBuster = (url) => {
-    if (!url) return null;
-    return `${url.split('?')[0]}?t=${Date.now()}`;
-};
+// Proteções
+import ProtectedRoute from "./components/ProtectedRoute";
+import RoleRoute from "./components/RoleRoute";
+
+// Dashboard correto do Admin
+import DashboardAdmin from "./pages/Administrador/DashboardAdmin";
+
+import RecuperarSenha from "./pages/RecuperarSenha/RecuperarSenha";
+
+// Painéis
+import PainelMercearia from "./pages/Mercearia/PainelMercearia";
+
+import NovaSenha from "./pages/NovaSenha/NovaSenha";
+
+
+// Módulo de Mercearias
+import ListaMercearias from "./pages/Administrador/Mercearias/ListaMercearias";
+import NovaMercearia from "./pages/Administrador/Mercearias/NovaMercearia";
+import EditarMercearia from "./pages/Administrador/Mercearias/EditarMercearia";
+import Excluidas from "./pages/Administrador/Mercearias/Excluidas";
+
+// Módulo de Operadores (Admin)
+import ListaOperadores from "./pages/Administrador/Operadores/ListaOperadores";
+import NovoOperador from "./pages/Administrador/Operadores/NovoOperador";
+import DetalhesOperador from "./pages/Administrador/Operadores/DetalhesOperador";
+import EditarOperador from "./pages/Administrador/Operadores/EditarOperador";
+
+// Contexto + Redirecionamento Automático
+import { useAuth } from "./contexts/AuthProvider";
+import { redirectByRole } from "./utils/redirectByRole";
+
+import "./App.css";
 
 function App() {
-  const [supabaseClient, setSupabaseClient] = useState(null); 
-  const [session, setSession] = useState(null); 
-  const [loading, setLoading] = useState(true);
-  const [statusAssinatura, setStatusAssinatura] = useState(null); 
-  const [logoUrl, setLogoUrl] = useState(null);
-  const [nomeFantasia, setNomeFantasia] = useState(null);
+  const { profile, loading, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // --- EFEITO 1: Carrega a biblioteca E Seta o Listener ---
-  useEffect(() => {
-    const checkSupabase = () => {
-      const supabaseGlobal = window.supabase || window['supabase'];
-      if (supabaseGlobal && typeof supabaseGlobal.createClient === 'function') {
-        const client = createSupabaseClient();
-        if (client) {
-            console.log("App.jsx: Cliente Supabase criado via CDN.");
-            setSupabaseClient(client); 
+  // Redirecionamento automático baseado na ROLE
+  React.useEffect(() => {
+    if (loading) return;
+    if (!user || !profile) return;
 
-            const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
-              console.log("App.jsx: onAuthStateChange →", _event);
-              setSession(session); 
-              if (_event === 'SIGNED_OUT') {
-                setStatusAssinatura(null); 
-                setLogoUrl(null); 
-                setNomeFantasia(null);
-              }
-            });
-
-            return () => {
-              authListener?.subscription?.unsubscribe?.();
-            };
-        }
-      } else {
-        console.log("App.jsx: Aguardando biblioteca Supabase carregar...");
-        setTimeout(checkSupabase, 100);
-      }
-    };
-    checkSupabase(); 
-  }, []);
-
-  // --- EFEITO 2: Verifica Status (apenas quando tiver userId) ---
-  const userId = session?.user?.id;
-
-  useEffect(() => {
-
-    // 🔒 Se não tem userId, limpa tudo e NÃO chama a API
-    if (!userId) {
-        console.log("App.jsx: Nenhum usuário logado → não chamar status.");
-        setLoading(false);
-        setStatusAssinatura(null);
-        setLogoUrl(null);
-        setNomeFantasia(null);
-        return;
+    if (location.pathname === "/") {
+      const destino = redirectByRole(profile);
+      navigate(destino, { replace: true });
     }
+  }, [profile, loading, user, location.pathname, navigate]);
 
-    // 🛑 Se já temos status carregado, não repetir a chamada
-    if (statusAssinatura !== null) {
-        console.log("App.jsx: Status já carregado → evitar nova chamada.");
-        setLoading(false);
-        return;
-    }
+  return (
+    <Routes>
 
-    // ✔ Agora sim: userId existe e status ainda não foi carregado
-    console.log(`App.jsx: Buscando status do usuário [${userId}]...`);
-    setLoading(true);
+      {/* Tela de Login */}
+      <Route path="/login" element={<Login />} />
 
-    fetch(`${BACKEND_BASE_URL}/api/mercearias/status/${userId}`)
-        .then(response => {
-            if (response.status === 404) {
-                console.warn("Usuário autenticado mas não registrado (404).");
-                return { status: "trial" };
-            }
-            if (!response.ok) {
-                throw new Error('Erro ao verificar status');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data) {
-                console.log("Status recebido:", data.status);
-                setStatusAssinatura(data.status);
-                setLogoUrl(addCacheBuster(data.logo_url));
-                setNomeFantasia(data.nome_fantasia || 'Minha Mercearia');
-            }
-        })
-        .catch(err => {
-            console.error("Erro ao buscar status:", err);
-            setStatusAssinatura('bloqueada');
-        })
-        .finally(() => {
-            setLoading(false);
-        });
+      {/* ============================ */}
+      {/* PAINEL ADMINISTRADOR */}
+      {/* ============================ */}
+      
+      <Route path="/recuperar-senha" element={<RecuperarSenha />} />
 
-  }, [userId]); // 🔥 Removido statusAssinatura daqui (evita loop infinito)
+      <Route path="/nova-senha" element={<NovaSenha />} />
 
-  // --- Função de Logout ---
-  const handleLogout = async () => {
-      if (supabaseClient) {
-          await supabaseClient.auth.signOut();
-      }
-  };
-
-  // --- Renderização ---
-  if (loading) {
-    return <div>Carregando sistema...</div>;
-  }
-
-  const statusLimpo = statusAssinatura?.trim().replace(/'/g, "") || null;
-
-  // 1. Não tem sessão? Vai pro Login.
-  if (!session) {
-    return <Auth supabaseProp={supabaseClient} />;
-  }
-
-  // 2. Tem sessão, mas está bloqueado?
-  if (statusLimpo === 'bloqueada') {
-    return <TelaBloqueio onLogout={handleLogout} />;
-  }
-
-  // 3. Tem sessão e está ativa ou trial?
-  if (statusLimpo === 'ativa' || statusLimpo === 'trial') {
-    return (
-      <Dashboard
-        key={session.user.id}
-        session={session}
-        supabaseProp={supabaseClient}
-        onLogout={handleLogout}
-        logoUrl={logoUrl}
-        nomeFantasia={nomeFantasia}
-        onLogoUpdated={newBaseUrl =>
-            setLogoUrl(addCacheBuster(newBaseUrl))
+      <Route
+        path="/admin"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <DashboardAdmin />
+          </RoleRoute>
         }
       />
-    );
-  }
 
-  // 4. Fallback
-  return <div>Verificando assinatura... (Status: {statusAssinatura || 'null'})</div>;
+      {/* CRUD DE MERCEARIAS */}
+      <Route
+        path="/admin/mercearias/nova"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <NovaMercearia />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/mercearias/excluidas"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <Excluidas />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/mercearias/:id/operadores"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <ListaOperadores />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/operadores/novo"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <NovoOperador />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/operadores/:id"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <DetalhesOperador />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/operadores/editar/:id"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <EditarOperador />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/admin/mercearias/:id"
+        element={
+          <RoleRoute allowedRoles={["super_admin"]}>
+            <EditarMercearia />
+          </RoleRoute>
+        }
+      />
+
+      {/* ============================ */}
+      {/* PAINEL MERCEARIA (merchant/operator) */}
+      {/* ============================ */}
+      <Route
+        path="/mercearia/:id"
+        element={
+          <RoleRoute allowedRoles={["merchant", "operator"]}>
+            <PainelMercearia />
+          </RoleRoute>
+        }
+      />
+
+      {/* ============================ */}
+      {/* Rota Raiz → redirecionamento automático */}
+      {/* ============================ */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <div style={{ padding: 20 }}>Redirecionando...</div>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Telas auxiliares */}
+      <Route path="/bloqueado" element={<TelaBloqueio />} />
+
+      <Route
+        path="/unauthorized"
+        element={<div>Sem permissão para acessar esta página.</div>}
+      />
+
+      {/* 404 */}
+      <Route path="*" element={<div>Página não encontrada</div>} />
+    </Routes>
+  );
 }
 
 export default App;

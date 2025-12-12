@@ -1,0 +1,365 @@
+/* ===== Mercearias.css (consolidado e seguro) ===== */
+
+.merc-wrapper {
+  padding: 18px;
+}
+
+/* Botões básico */
+.btn-primary {
+  background: #00c3a5;
+  padding: 10px 14px;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover { opacity: 0.95; }
+
+.btn-secondary {
+  background: #6c757d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-edit {
+  padding: 8px 12px;
+  background: #0d1117;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.btn-voltar {
+  background: #6c757d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-danger {
+  padding: 8px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-danger:hover { opacity: 0.95; }
+
+.btn-delete {
+  background-color: #d9534f;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* tabelas/forms */
+.merc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.merc-table th, .merc-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.merc-form {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  max-width: 700px;
+}
+
+.merc-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.merc-form input, .merc-form select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+/* erro */
+.erro-box {
+  background: #ffdddd;
+  color: #900;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #ffbbbb;
+}
+
+/* premium detail styles */
+.premium-card {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  margin-top: 18px;
+}
+
+.premium-logo-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.premium-logo, .logo-preview-box {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #eee;
+}
+
+.premium-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.premium-info-card {
+  background: #fafafa;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.premium-info-card h3 { margin-top: 0; }
+
+/* detalhes page */
+.det-wrapper { padding: 6px 0 20px; }
+
+.det-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+.det-logo-box img, .det-logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.det-logo-placeholder {
+  width: 110px;
+  height: 110px;
+  background: #ececec;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #777;
+  font-size: 14px;
+}
+
+.det-head-info h1 { margin: 0; }
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+/* status badges */
+.status-ativa { background: #198754; color: white; }
+.status-bloqueada { background: #ffc107; color: black; }
+.status-inativa { background: #6c757d; color: white; }
+.status-excluida { background: #dc3545; color: white; }
+.status-indef { background: #adb5bd; color: black; }
+
+.det-head-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* det grid */
+.det-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.det-card {
+  background: white;
+  padding: 14px;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+}
+
+.det-card h3 { margin-top: 0; }
+
+/* logo area in edit */
+.logo-area { margin-top: 14px; }
+.logo-preview-box { width: 220px; height: 220px; object-fit: contain; }
+
+/* small helpers */
+.merc-top { margin-bottom: 18px; }
+.premium-actions { margin-top: 14px; display:flex; gap:10px; align-items:center; }
+
+@media (max-width: 900px) {
+  .premium-info-grid, .det-grid { grid-template-columns: 1fr; }
+  .det-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .det-head-actions { width:100%; justify-content:flex-start; }
+}
+/* ============================ */
+/*  MERCEARIAS EXCLUÍDAS - CARDS */
+/* ============================ */
+
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.card-mercearia-excluida {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 2px 10px rgba(0,0,0,0.08);
+  transition: 0.2s ease;
+  border-left: 6px solid #dc3545; /* vermelho elegante */
+}
+
+.card-mercearia-excluida:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 4px 14px rgba(0,0,0,0.12);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badge-excluida {
+  background: #dc3545;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.card-mercearia-excluida h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.card-mercearia-excluida p {
+  margin-top: 12px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.card-acoes {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-restaurar {
+  padding: 8px 14px;
+  background: #198754;
+  color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-restaurar:hover { opacity: 0.9; }
+
+.btn-excluir-def {
+  padding: 8px 14px;
+  background: #dc3545;
+  color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-excluir-def:hover { opacity: 0.9; }
+
+/* ============================ */
+/* MODAL PREMIUM */
+/* ============================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal-box {
+  background: white;
+  padding: 25px;
+  width: 430px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 18px rgba(0,0,0,0.3);
+  animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1);   }
+}
+
+.modal-box h2 {
+  margin: 0 0 12px 0;
+}
+
+.modal-acoes {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-confirmar {
+  background: #dc3545;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: white;
+  border: none;
+}
+
+.btn-cancelar {
+  background: #6c757d;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: white;
+  border: none;
+}

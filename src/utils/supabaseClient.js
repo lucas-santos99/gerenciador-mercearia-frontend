@@ -1,17 +1,12 @@
-// ATENÇÃO: Hardcoded (como definimos no teste anterior)
-const supabaseUrl = "https://mrdfbujijgiaqutkpuch.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZGZidWppamdpYXF1dGtwdWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MzEzODQsImV4cCI6MjA3NzIwNzM4NH0.zfKHSMP9ugSUaiYadky-830rRjEL6gPTmeDXLE9b-jo";
+// src/utils/supabaseClient.js
+import { createClient } from '@supabase/supabase-js';
 
-// Exporta uma FUNÇÃO que cria o cliente QUANDO CHAMADA
-export const createSupabaseClient = () => {
-    // Acessa o objeto global 'supabase' que a CDN deve ter criado
-    const supabaseGlobal = window.supabase || window['supabase'];
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-    if (!supabaseGlobal || typeof supabaseGlobal.createClient !== 'function') {
-        console.error("ERRO FATAL: A biblioteca Supabase (CDN) ainda não foi carregada quando createSupabaseClient foi chamado.");
-        return null; // Retorna nulo se a biblioteca não estiver pronta
-    }
-
-    // Cria e retorna o cliente
-    return supabaseGlobal.createClient(supabaseUrl, supabaseAnonKey);
-};
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});

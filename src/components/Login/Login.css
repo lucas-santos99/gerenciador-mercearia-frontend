@@ -1,0 +1,194 @@
+/* ========================================= */
+/* LOGIN PAGE - LAYOUT IGUAL AO MODELO BASE */
+/* ========================================= */
+
+.login-container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background: white;
+    overflow: hidden;
+}
+
+/* ========================================= */
+/* LADO ESQUERDO — DESIGN PREMIUM E ELEGANTE */
+/* ========================================= */
+
+.login-left {
+    flex: 0.75;
+    background: linear-gradient(135deg, #05070c 0%, #0b121c 40%, #0f2133 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 150px 50px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-left::before {
+    content: "";
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    width: 700px;
+    height: 700px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        circle,
+        rgba(0, 150, 255, 0.22) 0%,
+        rgba(0, 0, 0, 0) 70%
+    );
+    filter: blur(90px);
+    z-index: 0;
+}
+
+.login-left-content {
+    position: relative;
+    z-index: 2;
+    text-align: left;
+    max-width: 420px;
+}
+
+.login-logo {
+    width: 500px;
+    max-width: 100%;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 18px rgba(0, 180, 255, 0.25));
+}
+
+.login-title {
+    font-size: 2.6rem;
+    font-weight: 700;
+    margin-top: -80px; 
+    margin-bottom: 6px; 
+    line-height: 1.2;
+}
+
+.login-subtitle {
+    font-size: 1.15rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 30px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.login-left-footer {
+    margin-top: auto;
+    text-align: center;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.55);
+}
+
+/* ========================================= */
+/* LADO DIREITO — FORMULÁRIO                */
+/* ========================================= */
+
+.login-right {
+    flex: 1.25;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 150px; /* ⬅⬅ puxado um pouquinho pra direita */
+}
+
+.login-box {
+    width: 420px;
+    padding: 40px 38px;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0px 8px 40px rgba(0,0,0,0.08);
+    transform: translateY(-20px);
+}
+
+.login-box h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-form label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.login-form input {
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    background: #fdfdfd;
+}
+
+.login-form input:focus {
+    border-color: #0f2133;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(15, 33, 51, 0.25);
+}
+
+/* CHECKBOX + TEXTO */
+.login-remember {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.login-remember label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login-remember input {
+    margin: 0;
+}
+
+/* LINK "ESQUECI A SENHA" COM COR DO GRADIENTE */
+.login-forgot {
+    text-decoration: none;
+    color: #0f2133;
+}
+.login-forgot:hover {
+    text-decoration: underline;
+}
+
+/* BOTÃO COM GRADIENTE DO LADO ESQUERDO */
+.login-btn {
+    margin-top: 8px;
+    background: linear-gradient(90deg, #0b121c, #0f2133);
+    padding: 14px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.login-btn:hover {
+    filter: brightness(1.15);
+}
+
+.login-footer {
+    display: none !important;
+}
+
+/* Mensagem de erro */
+.login-error {
+    background: rgba(255,0,0,0.12);
+    padding: 10px;
+    color: #d63031;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
