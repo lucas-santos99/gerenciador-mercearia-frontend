@@ -20,6 +20,7 @@ import PainelMercearia from "./pages/Mercearia/PainelMercearia";
 
 import NovaSenha from "./pages/NovaSenha/NovaSenha";
 
+import AuthCallback from "./pages/AuthCallback/AuthCallback";
 
 // Módulo de Mercearias
 import ListaMercearias from "./pages/Administrador/Mercearias/ListaMercearias";
@@ -66,6 +67,8 @@ function App() {
       {/* ============================ */}
       
       <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       <Route path="/nova-senha" element={<NovaSenha />} />
 

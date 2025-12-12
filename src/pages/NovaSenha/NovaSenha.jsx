@@ -12,32 +12,18 @@ export default function NovaSenha() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    async function handleRecovery() {
-      const urlParams = new URLSearchParams(window.location.search);
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
 
-      const type = urlParams.get("type");
-      const token = urlParams.get("access_token");
-
-      // Se não vier token ou type incorreto
-      if (type !== "recovery" || !token) {
+      if (!data.session) {
         setErrorMsg("Link inválido ou expirado.");
         return;
       }
 
-      // Tentar ativar o token usando Supabase v2
-      const { data, error } = await supabase.auth.exchangeCodeForSession(token);
-
-      if (error) {
-        console.error("Erro ao validar token:", error);
-        setErrorMsg("Link inválido ou expirado.");
-        return;
-      }
-
-      // Token aceito → agora podemos exibir o formulário
       setTokenLoaded(true);
     }
 
-    handleRecovery();
+    checkSession();
   }, []);
 
   async function handleSubmit(e) {
