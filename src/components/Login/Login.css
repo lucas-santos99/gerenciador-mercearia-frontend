@@ -5,7 +5,6 @@
 .login-container {
     display: flex;
     width: 100%;
-    min-height: 100vh;
     background: white;
 }
 
@@ -205,7 +204,6 @@
 @media (max-width: 900px) {
     .login-container {
         flex-direction: column;
-        min-height: auto;
     }
 
     .login-left {
