@@ -307,3 +307,33 @@
         overflow-y: auto;
     }
 }
+/* ========================================= */
+/* FIX DEFINITIVO DE SCROLL — MOBILE */
+/* ========================================= */
+
+@media (max-width: 900px) {
+
+    html, body {
+        height: auto;
+        overflow-y: auto;
+    }
+
+    .login-container {
+        min-height: 100%;
+        height: auto;
+        overflow: visible;
+    }
+
+    .login-left,
+    .login-right {
+        height: auto;
+        min-height: unset;
+    }
+}
+@media (max-width: 600px) {
+    .login-box {
+        padding-bottom: 60px;
+    }
+}
+
+
