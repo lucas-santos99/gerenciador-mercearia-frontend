@@ -5,6 +5,8 @@ import LayoutAdmin from "../Painel/LayoutAdmin";
 import "./Mercearias.css";
 
 export default function Excluidas() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [lista, setLista] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -14,13 +16,30 @@ export default function Excluidas() {
   const [nomeSelecionado, setNomeSelecionado] = useState("");
 
   async function carregar() {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const resp = await fetch("http://localhost:3001/admin/mercearias/excluidas");
-    const data = await resp.json();
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
 
-    setLista(data || []);
-    setLoading(false);
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/excluidas`,
+        { credentials: "include" }
+      );
+
+      if (!resp.ok) {
+        throw new Error("Erro ao buscar excluídas");
+      }
+
+      const data = await resp.json();
+      setLista(data || []);
+    } catch (err) {
+      console.error("Erro ao carregar excluídas:", err);
+      setLista([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -30,35 +49,51 @@ export default function Excluidas() {
   async function restaurar(id) {
     if (!window.confirm("Restaurar esta mercearia?")) return;
 
-    const resp = await fetch(
-      `http://localhost:3001/admin/mercearias/${id}/restaurar`,
-      { method: "PUT" }
-    );
+    try {
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/${id}/restaurar`,
+        {
+          method: "PUT",
+          credentials: "include",
+        }
+      );
 
-    if (resp.ok) {
-      alert("Mercearia restaurada!");
-      carregar();
-    } else {
-      const json = await resp.json();
-      alert("Erro: " + json.error);
+      if (resp.ok) {
+        alert("Mercearia restaurada!");
+        carregar();
+      } else {
+        const json = await resp.json();
+        alert("Erro: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao restaurar mercearia.");
     }
   }
 
   async function excluirDefinitivo() {
     if (!idSelecionado) return;
 
-    const resp = await fetch(
-      `http://localhost:3001/admin/mercearias/${idSelecionado}/apagar-definitivo`,
-      { method: "DELETE" }
-    );
+    try {
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/${idSelecionado}/apagar-definitivo`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
-    if (resp.ok) {
-      alert("Mercearia removida definitivamente!");
-      setModalAtivo(false);
-      carregar();
-    } else {
-      const json = await resp.json();
-      alert("Erro: " + json.error);
+      if (resp.ok) {
+        alert("Mercearia removida definitivamente!");
+        setModalAtivo(false);
+        carregar();
+      } else {
+        const json = await resp.json();
+        alert("Erro: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir definitivamente.");
     }
   }
 
@@ -74,7 +109,7 @@ export default function Excluidas() {
         <div className="merc-topo-excluidas">
           <h1>Mercearias Excluídas</h1>
 
-         <Link className="btn-voltar" to="/admin">
+          <Link className="btn-voltar" to="/admin">
             ← Voltar
           </Link>
         </div>
@@ -96,7 +131,10 @@ export default function Excluidas() {
                 <p><strong>Telefone:</strong> {m.telefone || "-"}</p>
 
                 <div className="card-acoes">
-                  <button className="btn-restaurar" onClick={() => restaurar(m.id)}>
+                  <button
+                    className="btn-restaurar"
+                    onClick={() => restaurar(m.id)}
+                  >
                     Restaurar
                   </button>
 
@@ -118,16 +156,23 @@ export default function Excluidas() {
             <div className="modal-box">
               <h2>Excluir Permanentemente</h2>
               <p>
-                Tem certeza que deseja remover <strong>{nomeSelecionado}</strong> 
+                Tem certeza que deseja remover{" "}
+                <strong>{nomeSelecionado}</strong>{" "}
                 permanentemente? Esta ação não pode ser desfeita.
               </p>
 
               <div className="modal-acoes">
-                <button className="btn-cancelar" onClick={() => setModalAtivo(false)}>
+                <button
+                  className="btn-cancelar"
+                  onClick={() => setModalAtivo(false)}
+                >
                   Cancelar
                 </button>
 
-                <button className="btn-confirmar" onClick={excluirDefinitivo}>
+                <button
+                  className="btn-confirmar"
+                  onClick={excluirDefinitivo}
+                >
                   Sim, excluir definitivamente
                 </button>
               </div>
