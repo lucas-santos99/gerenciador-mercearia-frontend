@@ -292,3 +292,18 @@
         font-size: 1.05rem;
     }
 }
+/* ========================================= */
+/* CORREÇÃO DE SCROLL NO MOBILE */
+/* ========================================= */
+
+@media (max-width: 900px) {
+    .login-container {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    body {
+        overflow-y: auto;
+    }
+}
