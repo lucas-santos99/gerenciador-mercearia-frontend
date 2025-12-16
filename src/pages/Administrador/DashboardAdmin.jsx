@@ -1,10 +1,11 @@
-// src/pages/Administrador/DashboardAdmin.jsx
 import React, { useEffect, useState } from "react";
 import LayoutAdmin from "./Painel/LayoutAdmin";
 import "./DashboardAdmin.css";
 import { useNavigate } from "react-router-dom";
 
 export default function DashboardAdmin() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
@@ -22,60 +23,82 @@ export default function DashboardAdmin() {
   const navigate = useNavigate();
 
   async function carregarDados() {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const resp1 = await fetch("http://localhost:3001/admin/mercearias/listar");
-    const lista = (await resp1.json()) || [];
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
 
-    const resp2 = await fetch("http://localhost:3001/admin/mercearias/excluidas");
-    const excluidas = (await resp2.json()) || [];
+      const resp1 = await fetch(
+        `${API_URL}/admin/mercearias/listar`
+      );
+      const lista = (await resp1.json()) || [];
 
-    const ativas = lista.filter((m) => m.status_assinatura === "ativa").length;
-    const inativas = lista.filter(
-      (m) =>
-        m.status_assinatura === "inativa" ||
-        m.status_assinatura === "bloqueada"
-    ).length;
+      const resp2 = await fetch(
+        `${API_URL}/admin/mercearias/excluidas`
+      );
+      const excluidas = (await resp2.json()) || [];
 
-    setStats({
-      total: lista.length,
-      ativas,
-      inativas,
-      excluidas: excluidas.length,
-      ultimas: lista.slice(0, 5),
-      todas: lista,
-    });
+      const ativas = lista.filter(
+        (m) => m.status_assinatura === "ativa"
+      ).length;
 
-    setLoading(false);
+      const inativas = lista.filter(
+        (m) =>
+          m.status_assinatura === "inativa" ||
+          m.status_assinatura === "bloqueada"
+      ).length;
+
+      setStats({
+        total: lista.length,
+        ativas,
+        inativas,
+        excluidas: excluidas.length,
+        ultimas: lista.slice(0, 5),
+        todas: lista,
+      });
+    } catch (err) {
+      console.error("Erro ao carregar dashboard admin:", err);
+      alert("Erro ao carregar dados do dashboard.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     carregarDados();
   }, []);
 
-  const listaFiltrada = stats.todas
-    .filter((m) => {
-      if (apenasAtivas && m.status_assinatura !== "ativa") return false;
-      if (filtro && m.status_assinatura !== filtro) return false;
-      if (!busca) return true;
-      const q = busca.toLowerCase();
-      return (
-        (m.nome_fantasia || "").toLowerCase().includes(q) ||
-        (m.cnpj || "").toLowerCase().includes(q)
-      );
-    });
+  const listaFiltrada = stats.todas.filter((m) => {
+    if (apenasAtivas && m.status_assinatura !== "ativa") return false;
+    if (filtro && m.status_assinatura !== filtro) return false;
+    if (!busca) return true;
+
+    const q = busca.toLowerCase();
+    return (
+      (m.nome_fantasia || "").toLowerCase().includes(q) ||
+      (m.cnpj || "").toLowerCase().includes(q)
+    );
+  });
 
   async function excluir(id) {
     if (!window.confirm("Tem certeza que deseja excluir esta mercearia?")) return;
 
-    const resp = await fetch(`http://localhost:3001/admin/mercearias/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/${id}`,
+        { method: "DELETE" }
+      );
 
-    if (resp.ok) {
-      alert("Mercearia excluída.");
-      carregarDados();
-    } else {
+      if (resp.ok) {
+        alert("Mercearia excluída.");
+        carregarDados();
+      } else {
+        alert("Erro ao excluir.");
+      }
+    } catch (err) {
+      console.error(err);
       alert("Erro ao excluir.");
     }
   }
@@ -186,11 +209,7 @@ export default function DashboardAdmin() {
                       <img
                         src={m.logo_url}
                         alt="logo"
-                        style={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: 8,
-                        }}
+                        style={{ width: 46, height: 46, borderRadius: 8 }}
                       />
                     ) : (
                       <div className="dash-logo-placeholder">
@@ -223,7 +242,9 @@ export default function DashboardAdmin() {
 
                     <button
                       className="btn-primary"
-                      onClick={() => navigate(`/admin/mercearias/${m.id}`)}
+                      onClick={() =>
+                        navigate(`/admin/mercearias/${m.id}`)
+                      }
                     >
                       Editar
                     </button>
