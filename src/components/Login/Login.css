@@ -278,3 +278,24 @@
     }
 }
 
+/* ========================================= */
+/* MOBILE: DESATIVA FULLSCREEN (FIX FINAL) */
+/* ========================================= */
+
+@media (max-width: 900px) {
+
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: auto !important;
+    overflow-y: auto !important;
+  }
+
+  .login-container {
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+}
