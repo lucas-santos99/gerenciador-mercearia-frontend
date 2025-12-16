@@ -1,29 +1,31 @@
 /* ========================================= */
-/* LOGIN PAGE - BASE                          */
+/* LOGIN PAGE - LAYOUT IGUAL AO MODELO BASE */
 /* ========================================= */
 
 .login-container {
     display: flex;
+    height: 100vh;
     width: 100%;
     background: white;
+    overflow: hidden;
 }
 
 /* ========================================= */
-/* LADO ESQUERDO — IDENTIDADE VISUAL          */
+/* LADO ESQUERDO — DESIGN PREMIUM E ELEGANTE */
 /* ========================================= */
 
 .login-left {
-    flex: 1.1;
+    flex: 0.75;
     background: linear-gradient(135deg, #05070c 0%, #0b121c 40%, #0f2133 100%);
     display: flex;
     flex-direction: column;
-    padding: 100px 50px;
+    justify-content: flex-start;
+    padding: 150px 50px;
     color: white;
     position: relative;
     overflow: hidden;
 }
 
-/* Glow decorativo */
 .login-left::before {
     content: "";
     position: absolute;
@@ -41,42 +43,37 @@
     z-index: 0;
 }
 
-/* Conteúdo esquerdo */
 .login-left-content {
     position: relative;
     z-index: 2;
+    text-align: left;
     max-width: 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
 }
 
-/* LOGO */
 .login-logo {
-    width: 420px;
+    width: 500px;
     max-width: 100%;
-    margin: 0;
+    margin-bottom: 10px;
     filter: drop-shadow(0 0 18px rgba(0, 180, 255, 0.25));
 }
 
-/* TÍTULO */
 .login-title {
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     font-weight: 700;
-    margin: 0;
+    margin-top: -80px; 
+    margin-bottom: 6px; 
     line-height: 1.2;
 }
 
-/* SUBTÍTULO */
 .login-subtitle {
     font-size: 1.15rem;
     font-weight: 300;
     color: rgba(255, 255, 255, 0.75);
-    margin: 0;
-    line-height: 1.45;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    line-height: 1.4;
 }
 
-/* RODAPÉ */
 .login-left-footer {
     margin-top: auto;
     text-align: center;
@@ -85,15 +82,15 @@
 }
 
 /* ========================================= */
-/* LADO DIREITO — FORMULÁRIO                 */
+/* LADO DIREITO — FORMULÁRIO                */
 /* ========================================= */
 
 .login-right {
-    flex: 1;
+    flex: 1.25;
     display: flex;
-    align-items: center;
     justify-content: flex-start;
-    padding-left: 90px;
+    align-items: center;
+    padding-left: 150px; /* ⬅⬅ puxado um pouquinho pra direita */
 }
 
 .login-box {
@@ -102,6 +99,7 @@
     border-radius: 20px;
     background: white;
     box-shadow: 0px 8px 40px rgba(0,0,0,0.08);
+    transform: translateY(-20px);
 }
 
 .login-box h2 {
@@ -137,7 +135,7 @@
     box-shadow: 0 0 0 4px rgba(15, 33, 51, 0.25);
 }
 
-/* Checkbox + links */
+/* CHECKBOX + TEXTO */
 .login-remember {
     display: flex;
     align-items: center;
@@ -151,19 +149,23 @@
     gap: 6px;
 }
 
+.login-remember input {
+    margin: 0;
+}
+
+/* LINK "ESQUECI A SENHA" COM COR DO GRADIENTE */
 .login-forgot {
     text-decoration: none;
     color: #0f2133;
 }
-
 .login-forgot:hover {
     text-decoration: underline;
 }
 
-/* Botão */
+/* BOTÃO COM GRADIENTE DO LADO ESQUERDO */
 .login-btn {
     margin-top: 8px;
-    background: linear-gradient(90deg, #0adfc4, #0f7f75);
+    background: linear-gradient(90deg, #0b121c, #0f2133);
     padding: 14px;
     font-size: 1.2rem;
     font-weight: 700;
@@ -171,99 +173,22 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    transition: 0.2s;
 }
-
 .login-btn:hover {
-    filter: brightness(0.92);
+    filter: brightness(1.15);
 }
 
-/* ========================================= */
-/* RESPONSIVIDADE                            */
-/* ========================================= */
-
-/* Telas médias */
-@media (max-width: 1200px) {
-    .login-left {
-        padding: 80px 40px;
-    }
-
-    .login-logo {
-        width: 360px;
-    }
-
-    .login-title {
-        font-size: 2.4rem;
-    }
-
-    .login-right {
-        padding-left: 60px;
-    }
+.login-footer {
+    display: none !important;
 }
 
-/* Tablets e Mobile */
-@media (max-width: 900px) {
-    .login-container {
-        flex-direction: column;
-    }
-
-    .login-left {
-        align-items: center;
-        text-align: center;
-        padding: 60px 30px;
-    }
-
-    .login-left-content {
-        align-items: center;
-        text-align: center;
-    }
-
-    .login-logo {
-        width: 300px;
-    }
-
-    .login-title {
-        font-size: 2.1rem;
-    }
-
-    .login-subtitle {
-        font-size: 1rem;
-    }
-
-    .login-right {
-        padding: 40px 20px;
-        justify-content: center;
-    }
-
-    .login-box {
-        max-width: 380px;
-        width: 100%;
-    }
-}
-
-/* Celulares */
-@media (max-width: 600px) {
-    .login-left {
-        padding: 40px 20px;
-    }
-
-    .login-logo {
-        width: 240px;
-    }
-
-    .login-title {
-        font-size: 1.8rem;
-    }
-
-    .login-subtitle {
-        font-size: 0.95rem;
-    }
-
-    .login-box {
-        max-width: 320px;
-        padding: 30px 22px;
-    }
-
-    .login-btn {
-        font-size: 1.1rem;
-    }
+/* Mensagem de erro */
+.login-error {
+    background: rgba(255,0,0,0.12);
+    padding: 10px;
+    color: #d63031;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 10px;
 }
