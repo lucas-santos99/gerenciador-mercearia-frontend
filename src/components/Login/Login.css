@@ -5,9 +5,7 @@
 .login-container {
     display: flex;
     width: 100%;
-    min-height: 100vh;
     background: white;
-    overflow: hidden;
 }
 
 /* ========================================= */
@@ -276,7 +274,7 @@
 
 @media (max-width: 900px) {
     .login-container {
-        overflow-y: auto;
-        overflow-x: hidden;
+        flex-direction: column;
     }
 }
+
