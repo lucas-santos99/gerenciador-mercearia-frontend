@@ -336,4 +336,32 @@
     }
 }
 
+/* ========================================= */
+/* FIX ABSOLUTO DE SCROLL — MOBILE */
+/* ========================================= */
+
+@media (max-width: 900px) {
+
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .login-container {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .login-left,
+    .login-right {
+        height: auto !important;
+        min-height: unset !important;
+        overflow: visible !important;
+    }
+}
 
