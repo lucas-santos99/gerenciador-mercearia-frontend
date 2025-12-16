@@ -270,3 +270,13 @@
         font-size: 1.1rem;
     }
 }
+/* ========================================= */
+/* FIX DEFINITIVO DE SCROLL — MOBILE */
+/* ========================================= */
+
+@media (max-width: 900px) {
+    .login-container {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+}
