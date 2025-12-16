@@ -5,6 +5,7 @@
 .login-container {
     display: flex;
     width: 100%;
+    min-height: 100vh;
     background: white;
 }
 
@@ -46,10 +47,9 @@
     position: relative;
     z-index: 2;
     max-width: 420px;
-
     display: flex;
     flex-direction: column;
-    gap: 14px; /* 🔹 ESPAÇAMENTO PADRÃO (OPÇÃO B) */
+    gap: 14px;
 }
 
 /* LOGO */
@@ -201,10 +201,11 @@
     }
 }
 
-/* Tablets */
+/* Tablets e Mobile */
 @media (max-width: 900px) {
     .login-container {
         flex-direction: column;
+        min-height: auto;
     }
 
     .login-left {
@@ -267,35 +268,4 @@
     .login-btn {
         font-size: 1.1rem;
     }
-}
-/* ========================================= */
-/* FIX DEFINITIVO DE SCROLL — MOBILE */
-/* ========================================= */
-
-@media (max-width: 900px) {
-    .login-container {
-        flex-direction: column;
-    }
-}
-
-/* ========================================= */
-/* MOBILE: DESATIVA FULLSCREEN (FIX FINAL) */
-/* ========================================= */
-
-@media (max-width: 900px) {
-
-  html,
-  body,
-  #root {
-    height: auto !important;
-    min-height: auto !important;
-    overflow-y: auto !important;
-  }
-
-  .login-container {
-    display: block !important;
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-  }
 }
