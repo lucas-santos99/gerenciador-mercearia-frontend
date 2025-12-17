@@ -7,6 +7,8 @@ import "./Mercearias.css";
 export default function NovaMercearia() {
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [form, setForm] = useState({
     nome_fantasia: "",
     cnpj: "",
@@ -37,11 +39,19 @@ export default function NovaMercearia() {
     setSalvando(true);
 
     try {
-      const resp = await fetch("http://localhost:3001/admin/mercearias/nova", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/nova`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+          credentials: "include",
+        }
+      );
 
       const json = await resp.json();
 
@@ -52,6 +62,7 @@ export default function NovaMercearia() {
         navigate("/admin");
       }
     } catch (e) {
+      console.error(e);
       setErro("Erro ao criar mercearia.");
     }
 
@@ -75,7 +86,11 @@ export default function NovaMercearia() {
           />
 
           <label>CNPJ</label>
-          <input name="cnpj" value={form.cnpj} onChange={atualizar} />
+          <input
+            name="cnpj"
+            value={form.cnpj}
+            onChange={atualizar}
+          />
 
           <label>Telefone</label>
           <input

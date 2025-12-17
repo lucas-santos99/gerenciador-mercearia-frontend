@@ -5,6 +5,8 @@ import LayoutAdmin from "../Painel/LayoutAdmin";
 import "./Mercearias.css";
 
 export default function ListaMercearias() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [lista, setLista] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +14,15 @@ export default function ListaMercearias() {
     setLoading(true);
 
     try {
-      const resposta = await fetch("http://localhost:3001/admin/mercearias/listar");
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
+      const resposta = await fetch(
+        `${API_URL}/admin/mercearias/listar`,
+        { credentials: "include" }
+      );
+
       const data = await resposta.json();
 
       console.log("📌 MERCEARIAS DO BACKEND:", data);
@@ -39,8 +49,11 @@ export default function ListaMercearias() {
 
     try {
       const resp = await fetch(
-        `http://localhost:3001/admin/mercearias/${id}`,
-        { method: "DELETE" }
+        `${API_URL}/admin/mercearias/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
       );
 
       if (resp.ok) {
@@ -66,10 +79,10 @@ export default function ListaMercearias() {
             + Nova Mercearia
           </Link>
         </div>
-        <Link className="btn-secondary" to="/admin/mercearias/excluidas">
-         Ver Excluídas
-        </Link>
 
+        <Link className="btn-secondary" to="/admin/mercearias/excluidas">
+          Ver Excluídas
+        </Link>
 
         {loading ? (
           <p>Carregando...</p>
@@ -112,34 +125,33 @@ export default function ListaMercearias() {
                   <td>{m.cnpj || "-"}</td>
                   <td>{m.telefone || "-"}</td>
 
-               <td>
-  {/* 🔹 Detalhes */}
-  <Link
-    className="btn-secondary"
-    to={`/admin/mercearias/${m.id}?view=details`}
-    style={{ marginRight: 10 }}
-  >
-    Detalhes
-  </Link>
+                  <td>
+                    {/* 🔹 Detalhes */}
+                    <Link
+                      className="btn-secondary"
+                      to={`/admin/mercearias/${m.id}?view=details`}
+                      style={{ marginRight: 10 }}
+                    >
+                      Detalhes
+                    </Link>
 
-  {/* 🔹 Editar */}
-  <Link
-    className="btn-edit"
-    to={`/admin/mercearias/${m.id}`}
-  >
-    Editar
-  </Link>
+                    {/* 🔹 Editar */}
+                    <Link
+                      className="btn-edit"
+                      to={`/admin/mercearias/${m.id}`}
+                    >
+                      Editar
+                    </Link>
 
-  {/* 🔹 Excluir */}
-  <button
-    className="btn-delete"
-    onClick={() => excluirMercearia(m.id)}
-    style={{ marginLeft: 10 }}
-  >
-    Excluir
-  </button>
-</td>
-
+                    {/* 🔹 Excluir */}
+                    <button
+                      className="btn-delete"
+                      onClick={() => excluirMercearia(m.id)}
+                      style={{ marginLeft: 10 }}
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

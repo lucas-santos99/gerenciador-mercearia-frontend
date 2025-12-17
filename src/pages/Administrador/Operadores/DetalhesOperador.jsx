@@ -9,6 +9,8 @@ export default function DetalhesOperador() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [op, setOp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showReset, setShowReset] = useState(false);
@@ -19,7 +21,15 @@ export default function DetalhesOperador() {
   async function carregar() {
     setLoading(true);
     try {
-      const resp = await fetch(`http://localhost:3001/admin/operadores/detalhes/${id}`);
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
+      const resp = await fetch(
+        `${API_URL}/admin/operadores/detalhes/${id}`,
+        { credentials: "include" }
+      );
+
       const data = await resp.json();
 
       if (resp.ok) setOp(data);
@@ -37,7 +47,7 @@ export default function DetalhesOperador() {
   }, [id]);
 
   // -----------------------------------------------------
-  // ALTERAR STATUS (CORRIGIDO)
+  // ALTERAR STATUS
   // -----------------------------------------------------
   async function toggleStatus() {
     if (!op) return;
@@ -47,11 +57,12 @@ export default function DetalhesOperador() {
 
     try {
       const resp = await fetch(
-        `http://localhost:3001/admin/operadores/${id}/status`,
+        `${API_URL}/admin/operadores/${id}/status`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: novoStatus })
+          body: JSON.stringify({ status: novoStatus }),
+          credentials: "include",
         }
       );
 
@@ -77,9 +88,13 @@ export default function DetalhesOperador() {
     if (!window.confirm("Excluir este operador?")) return;
 
     try {
-      const resp = await fetch(`http://localhost:3001/admin/operadores/${id}`, {
-        method: "DELETE",
-      });
+      const resp = await fetch(
+        `${API_URL}/admin/operadores/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       if (resp.ok) {
         alert("Operador excluído!");
@@ -174,15 +189,24 @@ export default function DetalhesOperador() {
             </div>
           )}
 
-          <div className="op-detail-row"><strong>Email:</strong> {op.email}</div>
-          <div className="op-detail-row"><strong>Telefone:</strong> {op.telefone || "-"}</div>
+          <div className="op-detail-row">
+            <strong>Email:</strong> {op.email}
+          </div>
+
+          <div className="op-detail-row">
+            <strong>Telefone:</strong> {op.telefone || "-"}
+          </div>
 
           <div className="op-detail-row">
             <strong>Status:</strong>
-            <span className={`badge-op status-${op.status}`}>{op.status}</span>
+            <span className={`badge-op status-${op.status}`}>
+              {op.status}
+            </span>
           </div>
 
-          <div className="op-detail-row"><strong>ID:</strong> {op.id}</div>
+          <div className="op-detail-row">
+            <strong>ID:</strong> {op.id}
+          </div>
         </div>
 
         <button

@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import "./Operadores.css";
 
 export default function ResetSenhaModal({ id, onClose }) {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [senha, setSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [saving, setSaving] = useState(false);
@@ -24,12 +26,17 @@ export default function ResetSenhaModal({ id, onClose }) {
     setSaving(true);
 
     try {
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
       const resp = await fetch(
-        `http://localhost:3001/admin/operadores/${id}/reset-senha`,
+        `${API_URL}/admin/operadores/${id}/reset-senha`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ senha }),
+          credentials: "include",
         }
       );
 
@@ -53,7 +60,6 @@ export default function ResetSenhaModal({ id, onClose }) {
   return (
     <div className="modal-overlay">
       <div className="modal-box">
-
         <h2>Resetar Senha</h2>
 
         {erro && (

@@ -8,6 +8,8 @@ export default function ListaOperadores() {
   const { id: merceariaId } = useParams();
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [operadores, setOperadores] = useState([]);
   const [mercearia, setMercearia] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,13 +21,23 @@ export default function ListaOperadores() {
     setLoading(true);
 
     try {
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
       // Buscar dados da mercearia
-      const respM = await fetch(`http://localhost:3001/admin/mercearias/${merceariaId}`);
+      const respM = await fetch(
+        `${API_URL}/admin/mercearias/${merceariaId}`,
+        { credentials: "include" }
+      );
       const dataM = await respM.json();
       if (respM.ok) setMercearia(dataM);
 
-      // Buscar operadores (rota existente)
-      const resp = await fetch(`http://localhost:3001/admin/operadores/${merceariaId}`);
+      // Buscar operadores
+      const resp = await fetch(
+        `${API_URL}/admin/operadores/${merceariaId}`,
+        { credentials: "include" }
+      );
       const data = await resp.json();
 
       setOperadores(resp.ok ? data : []);
@@ -48,9 +60,13 @@ export default function ListaOperadores() {
     if (!window.confirm("Deseja realmente excluir este operador?")) return;
 
     try {
-      const resp = await fetch(`http://localhost:3001/admin/operadores/${id}`, {
-        method: "DELETE"
-      });
+      const resp = await fetch(
+        `${API_URL}/admin/operadores/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       if (resp.ok) {
         alert("Operador excluído!");
@@ -70,16 +86,22 @@ export default function ListaOperadores() {
   return (
     <LayoutAdmin>
       <div className="op-wrapper">
-
         <div className="op-top">
           <div>
-            <h1>Operadores {mercearia ? `— ${mercearia.nome_fantasia}` : ""}</h1>
-            <p className="op-subtitle">Gerencie os operadores desta mercearia</p>
+            <h1>
+              Operadores{" "}
+              {mercearia ? `— ${mercearia.nome_fantasia}` : ""}
+            </h1>
+            <p className="op-subtitle">
+              Gerencie os operadores desta mercearia
+            </p>
           </div>
 
           <button
             className="btn-primary"
-            onClick={() => navigate(`/admin/operadores/novo?mercearia=${merceariaId}`)}
+            onClick={() =>
+              navigate(`/admin/operadores/novo?mercearia=${merceariaId}`)
+            }
           >
             + Novo Operador
           </button>
@@ -88,7 +110,9 @@ export default function ListaOperadores() {
         {loading ? (
           <p>Carregando operadores...</p>
         ) : operadores.length === 0 ? (
-          <p className="sem-operadores">Nenhum operador encontrado.</p>
+          <p className="sem-operadores">
+            Nenhum operador encontrado.
+          </p>
         ) : (
           <div className="table-wrapper">
             <table className="op-table">
@@ -108,13 +132,17 @@ export default function ListaOperadores() {
                   <tr key={op.id}>
                     <td>
                       <div className="op-avatar placeholder">
-                        {(op.nome || "?").charAt(0).toUpperCase()}
+                        {(op.nome || "?")
+                          .charAt(0)
+                          .toUpperCase()}
                       </div>
                     </td>
 
                     <td
                       className="op-nome"
-                      onClick={() => navigate(`/admin/operadores/${op.id}`)}
+                      onClick={() =>
+                        navigate(`/admin/operadores/${op.id}`)
+                      }
                     >
                       {op.nome}
                     </td>
@@ -124,7 +152,9 @@ export default function ListaOperadores() {
                     <td>{op.telefone || "-"}</td>
 
                     <td>
-                      <span className={`badge-op status-${op.status}`}>
+                      <span
+                        className={`badge-op status-${op.status}`}
+                      >
                         {op.status}
                       </span>
                     </td>
@@ -132,7 +162,9 @@ export default function ListaOperadores() {
                     <td>
                       <button
                         className="btn-primary"
-                        onClick={() => navigate(`/admin/operadores/${op.id}`)}
+                        onClick={() =>
+                          navigate(`/admin/operadores/${op.id}`)
+                        }
                       >
                         Detalhes
                       </button>
@@ -145,7 +177,6 @@ export default function ListaOperadores() {
                         Excluir
                       </button>
                     </td>
-
                   </tr>
                 ))}
               </tbody>

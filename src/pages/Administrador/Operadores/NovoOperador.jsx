@@ -8,8 +8,11 @@ export default function NovoOperador() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Captura ?mercearia=ID se existir
-  const merceariaFromQuery = new URLSearchParams(location.search).get("mercearia") || "";
+  const merceariaFromQuery =
+    new URLSearchParams(location.search).get("mercearia") || "";
 
   const [form, setForm] = useState({
     nome: "",
@@ -28,7 +31,12 @@ export default function NovoOperador() {
   // ============================
   async function carregarMercearias() {
     try {
-      const resp = await fetch("http://localhost:3001/admin/mercearias/listar");
+      if (!API_URL) throw new Error("VITE_API_URL não definida");
+
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/listar`,
+        { credentials: "include" }
+      );
       const data = await resp.json();
       setMercearias(data || []);
     } catch (err) {
@@ -63,13 +71,17 @@ export default function NovoOperador() {
     }
 
     try {
-      const resp = await fetch("http://localhost:3001/admin/operadores/criar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
+      const resp = await fetch(
+        `${API_URL}/admin/operadores/criar`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+          credentials: "include",
+        }
+      );
 
       const json = await resp.json();
 
@@ -95,7 +107,6 @@ export default function NovoOperador() {
         {erro && <p className="erro-box">{erro}</p>}
 
         <form className="merc-form" onSubmit={salvar}>
-          
           {/* MERCEARIA */}
           <label>Mercearia</label>
           <select

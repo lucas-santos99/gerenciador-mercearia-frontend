@@ -8,6 +8,8 @@ export default function EditarOperador() {
   const { id } = useParams(); // operador = auth.user.id
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [form, setForm] = useState({
     nome: "",
     email: "",
@@ -24,9 +26,15 @@ export default function EditarOperador() {
   async function carregar() {
     setLoading(true);
     try {
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
       const resp = await fetch(
-        `http://localhost:3001/admin/operadores/detalhes/${id}`
+        `${API_URL}/admin/operadores/detalhes/${id}`,
+        { credentials: "include" }
       );
+
       const data = await resp.json();
 
       if (resp.ok && data) {
@@ -69,11 +77,12 @@ export default function EditarOperador() {
 
     try {
       const resp = await fetch(
-        `http://localhost:3001/admin/operadores/${id}`,
+        `${API_URL}/admin/operadores/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
+          credentials: "include",
         }
       );
 
@@ -93,7 +102,7 @@ export default function EditarOperador() {
   }
 
   // ============================
-  //   LOADING / ERRO
+  //   LOADING
   // ============================
   if (loading) {
     return (
