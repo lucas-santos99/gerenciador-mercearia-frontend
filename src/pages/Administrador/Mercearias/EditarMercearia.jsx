@@ -9,6 +9,8 @@ export default function EditarMercearia() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Se URL contém ?view=details → modo somente leitura
   const modoDetalhes =
     new URLSearchParams(location.search).get("view") === "details";
@@ -32,7 +34,15 @@ export default function EditarMercearia() {
   async function carregarDados() {
     setCarregando(true);
     try {
-      const resp = await fetch(`http://localhost:3001/admin/mercearias/${id}`);
+      if (!API_URL) {
+        throw new Error("VITE_API_URL não definida");
+      }
+
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/${id}`,
+        { credentials: "include" }
+      );
+
       const data = await resp.json();
 
       if (resp.ok) {
@@ -43,13 +53,14 @@ export default function EditarMercearia() {
           email_contato: data.email_contato || "",
           endereco_completo: data.endereco_completo || "",
           status_assinatura: data.status_assinatura || "ativa",
-          data_vencimento: data.data_vencimento ?? null,
-          logo_url: data.logo_url || null,
+          data_vencimento: data.data_vencimento ?? "",
+          logo_url: data.logo_url || "",
         });
       } else {
         setErro(data.error || "Erro ao carregar mercearia");
       }
     } catch (e) {
+      console.error(e);
       setErro("Erro ao carregar dados");
     }
     setCarregando(false);
@@ -63,47 +74,51 @@ export default function EditarMercearia() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-async function salvar(e) {
-  e.preventDefault();
-  setErro("");
-  setSalvando(true);
+  async function salvar(e) {
+    e.preventDefault();
+    setErro("");
+    setSalvando(true);
 
-  // DATA exigida somente se ativa
-  if (form.status_assinatura === "ativa" && !form.data_vencimento) {
-    setErro("Data de vencimento é obrigatória quando a mercearia está ativa.");
-    setSalvando(false);
-    return;
-  }
-
-  const payload = {
-    ...form,
-    data_vencimento:
-      form.status_assinatura === "ativa" && form.data_vencimento
-        ? form.data_vencimento
-        : null,
-  };
-
-  try {
-    const resp = await fetch(`http://localhost:3001/admin/mercearias/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const json = await resp.json();
-
-    if (!resp.ok) {
-      setErro(json.error || "Erro ao salvar");
-    } else {
-      alert("Salvo com sucesso!");
-      navigate(`/admin/mercearias/${id}?view=details`);
+    if (form.status_assinatura === "ativa" && !form.data_vencimento) {
+      setErro("Data de vencimento é obrigatória quando a mercearia está ativa.");
+      setSalvando(false);
+      return;
     }
-  } catch (e) {
-    setErro("Erro ao salvar.");
-  }
 
-  setSalvando(false);
-}
+    const payload = {
+      ...form,
+      data_vencimento:
+        form.status_assinatura === "ativa"
+          ? form.data_vencimento
+          : null,
+    };
+
+    try {
+      const resp = await fetch(
+        `${API_URL}/admin/mercearias/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          credentials: "include",
+        }
+      );
+
+      const json = await resp.json();
+
+      if (!resp.ok) {
+        setErro(json.error || "Erro ao salvar");
+      } else {
+        alert("Salvo com sucesso!");
+        navigate(`/admin/mercearias/${id}?view=details`);
+      }
+    } catch (e) {
+      console.error(e);
+      setErro("Erro ao salvar.");
+    }
+
+    setSalvando(false);
+  }
 
   async function enviarLogo() {
     if (!logoFile) return alert("Selecione um arquivo!");
@@ -113,8 +128,12 @@ async function salvar(e) {
 
     try {
       const resp = await fetch(
-        `http://localhost:3001/admin/mercearias/${id}/upload-logo`,
-        { method: "POST", body: formData }
+        `${API_URL}/admin/mercearias/${id}/upload-logo`,
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        }
       );
 
       const json = await resp.json();
@@ -135,13 +154,16 @@ async function salvar(e) {
     if (!window.confirm("Remover logo?")) return;
 
     const resp = await fetch(
-      `http://localhost:3001/admin/mercearias/${id}/remover-logo`,
-      { method: "DELETE" }
+      `${API_URL}/admin/mercearias/${id}/remover-logo`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
     );
 
     if (resp.ok) {
       alert("Logo removida!");
-      setForm((s) => ({ ...s, logo_url: null }));
+      setForm((s) => ({ ...s, logo_url: "" }));
     } else {
       alert("Erro ao remover logo");
     }
@@ -150,9 +172,13 @@ async function salvar(e) {
   async function excluir() {
     if (!window.confirm("Tem certeza que deseja excluir?")) return;
 
-    const resp = await fetch(`http://localhost:3001/admin/mercearias/${id}`, {
-      method: "DELETE",
-    });
+    const resp = await fetch(
+      `${API_URL}/admin/mercearias/${id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
 
     if (resp.ok) {
       alert("Mercearia excluída!");
@@ -162,10 +188,7 @@ async function salvar(e) {
     }
   }
 
-  // ============================================
-  //  MODO DETALHES
-  // ============================================
-  if (carregando)
+  if (carregando) {
     return (
       <LayoutAdmin>
         <div className="merc-wrapper">
@@ -173,7 +196,11 @@ async function salvar(e) {
         </div>
       </LayoutAdmin>
     );
+  }
 
+  // ============================
+  // MODO DETALHES
+  // ============================
   if (modoDetalhes) {
     return (
       <LayoutAdmin>
@@ -192,14 +219,10 @@ async function salvar(e) {
 
               <div className="det-head-info">
                 <h1>{form.nome_fantasia}</h1>
-                <p style={{ marginTop: 6 }}>
-                  <span className={`badge status-${form.status_assinatura}`}>
-                    {form.status_assinatura}
-                  </span>
-                </p>
-                <p style={{ marginTop: 4 }}>
-                  Vencimento: {form.data_vencimento || "-"}
-                </p>
+                <span className={`badge status-${form.status_assinatura}`}>
+                  {form.status_assinatura}
+                </span>
+                <p>Vencimento: {form.data_vencimento || "-"}</p>
               </div>
 
               <div className="det-head-actions">
@@ -223,18 +246,10 @@ async function salvar(e) {
             <div className="det-grid">
               <div className="det-card">
                 <h3>Informações da Empresa</h3>
-                <p>
-                  <strong>CNPJ:</strong> {form.cnpj || "-"}
-                </p>
-                <p>
-                  <strong>Telefone:</strong> {form.telefone || "-"}
-                </p>
-                <p>
-                  <strong>Email:</strong> {form.email_contato || "-"}
-                </p>
-                <p>
-                  <strong>Endereço:</strong> {form.endereco_completo || "-"}
-                </p>
+                <p><strong>CNPJ:</strong> {form.cnpj || "-"}</p>
+                <p><strong>Telefone:</strong> {form.telefone || "-"}</p>
+                <p><strong>Email:</strong> {form.email_contato || "-"}</p>
+                <p><strong>Endereço:</strong> {form.endereco_completo || "-"}</p>
               </div>
             </div>
           </div>
@@ -243,9 +258,9 @@ async function salvar(e) {
     );
   }
 
-  // ============================================
-  //  MODO EDITAR
-  // ============================================
+  // ============================
+  // MODO EDITAR
+  // ============================
   return (
     <LayoutAdmin>
       <div className="merc-wrapper">
@@ -308,26 +323,18 @@ async function salvar(e) {
             </>
           )}
 
-          {/* LOGO */}
-          <div className="logo-area" style={{ marginTop: 16 }}>
+          <div className="logo-area">
             <h3>Logo da Mercearia</h3>
 
             {form.logo_url ? (
-              <img
-                src={form.logo_url}
-                alt="Logo"
-                className="logo-preview-box"
-              />
+              <img src={form.logo_url} alt="Logo" className="logo-preview-box" />
             ) : (
               <p>Nenhuma logo enviada</p>
             )}
 
-            <input
-              type="file"
-              onChange={(e) => setLogoFile(e.target.files[0])}
-            />
+            <input type="file" onChange={(e) => setLogoFile(e.target.files[0])} />
 
-            <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+            <div className="logo-actions">
               <button type="button" className="btn-primary" onClick={enviarLogo}>
                 Enviar Logo
               </button>
@@ -344,7 +351,7 @@ async function salvar(e) {
             </div>
           </div>
 
-          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <div className="form-actions">
             <button className="btn-primary" disabled={salvando}>
               {salvando ? "Salvando..." : "Salvar Alterações"}
             </button>
