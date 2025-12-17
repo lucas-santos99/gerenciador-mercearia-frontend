@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthProvider";
 import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
-import api from "../../services/api";
 
 import logo from "../../assets/logo-lucasjsystems.png";
 
@@ -20,21 +19,24 @@ export default function Login() {
     setError("");
 
     try {
-      // 1️⃣ Login no Supabase
-      const { user } = await login({ email, password: senha });
+// 1️⃣ Login no Supabase
+const { user } = await login({ email, password: senha });
 
-      // 2️⃣ Validar acesso no backend
-      await api.post("/operadores/validar-acesso", {
-        userId: user.id,
-      });
+// 2️⃣ Validar acesso no backend
+const resp = await fetch(
+  `${import.meta.env.VITE_API_URL}/operadores/validar-acesso`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ userId: user.id }),
+  }
+);
 
-      // 3️⃣ Remember me
-      if (remember) {
-        localStorage.setItem("savedLogin", email);
-      } else {
-        localStorage.removeItem("savedLogin");
-      }
-
+if (!resp.ok) {
+  const data = await resp.json();
+  throw new Error(data.error || "Acesso negado");
+}
       // 4️⃣ Acesso liberado
       navigate("/");
     } catch (err) {
