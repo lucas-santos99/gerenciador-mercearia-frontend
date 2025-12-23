@@ -71,16 +71,29 @@
   flex: 1;
 }
 
+/* FOOTER DA SIDEBAR */
 .sidebar-footer {
-  padding: 16px;
+  padding: 16px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* BOTÃO SAIR */
 .sidebar-logout {
   width: 100%;
   background: transparent;
   border: none;
-  color: #ff5c5c;
+  color: #ff6b6b;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
+  padding: 10px 12px;
   text-align: left;
+  border-radius: 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* HOVER */
+.sidebar-logout:hover {
+  background: rgba(255, 107, 107, 0.12);
+  color: #ff4d4d;
 }
