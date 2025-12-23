@@ -1,15 +1,27 @@
-// src/pages/Administrador/Componentes/Sidebar.jsx
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
+import { useAuth } from "../../../contexts/AuthProvider";
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const menuItems = [
     { label: "Dashboard", path: "/admin" },
     { label: "Configurações", path: "/admin/configuracoes" },
   ];
+
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (err) {
+      console.error("Erro ao sair:", err);
+      alert("Erro ao encerrar sessão.");
+    }
+  }
 
   return (
     <div className="sidebar">
@@ -28,6 +40,16 @@ export default function Sidebar() {
           </li>
         ))}
       </ul>
+
+      {/* BOTÃO SAIR */}
+      <div className="sidebar-footer">
+        <button
+          className="sidebar-logout"
+          onClick={handleLogout}
+        >
+          Sair
+        </button>
+      </div>
     </div>
   );
 }

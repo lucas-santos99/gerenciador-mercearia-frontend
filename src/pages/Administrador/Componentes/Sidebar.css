@@ -62,3 +62,25 @@
   color: #0adfc4;
   text-shadow: 0 0 6px rgba(10, 223, 196, 0.4);
 }
+.sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-menu {
+  flex: 1;
+}
+
+.sidebar-footer {
+  padding: 16px;
+}
+
+.sidebar-logout {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #ff5c5c;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
